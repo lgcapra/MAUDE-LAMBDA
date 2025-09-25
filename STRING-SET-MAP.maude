@@ -1,0 +1,22 @@
+in LAMBDA-OP
+
+*** set of strings
+fmod STRING-SET is
+ pr SET{String} * (sort NeSet{String} to NeStringSet, sort Set{String} to StringSet) .
+endfm
+
+*** maps the theory MONOID+ to STRING-SET 
+view StringSet from MONOID+ to STRING-SET is
+  sort Elt to StringSet .
+  sort El to String .
+  op __ to _,_ .
+  op 1 to empty .
+  op m to upperCase . *** maps m into upperCase
+endv
+
+*** makes it possible to make a list of strings uppercase
+*** for example, try
+*** > maude red map(("a", "S", "dado", "$dgg")) .
+fmod STRING-SET-MAP is
+  pr LAMBDA-MAP{StringSet} .
+endfm

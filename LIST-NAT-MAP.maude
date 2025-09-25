@@ -1,0 +1,18 @@
+in LAMBDA-OP
+
+*** the module NAT-LIST is predefined 
+
+*** maps the theory MONOID+ to NAT-LIST 
+view NatList from MONOID+ to NAT-LIST is
+  sort Elt to NatList .
+  sort El to Nat .
+  op 1 to nil .
+  op m(X:El) to term s(X:Nat) . *** on-the-fly map of m into the successor
+endv
+
+*** makes it possible to calculate the successors in list
+*** for example, try
+*** > maude red map(1 2 3 4 5) . .
+fmod LIST-NAT-MAP is
+  pr LAMBDA-MAP{NatList} .
+endfm

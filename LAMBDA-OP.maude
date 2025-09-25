@@ -1,0 +1,20 @@
+*** the theory MONOID+ defines a monoid extended with a unary op and a subsort relationship
+fth MONOID+ is 
+ including TRIV .
+ sort El .
+ subsort El < Elt . 
+ op 1 : -> Elt . 
+ op __ : Elt Elt -> Elt [assoc id: 1] . 
+ op m : El -> El . 
+endfth
+
+*** the parametrized functional module LAMBDA-MAP defines the map operation for a monoid
+fmod LAMBDA-MAP{X :: MONOID+} is
+  op map : X$Elt -> X$Elt .
+  op $map : X$Elt X$Elt -> X$Elt .
+  vars L A : X$Elt . 
+  var E : X$El .
+  eq map (L) = $map (L, 1) .
+  eq $map (1, A) = A .
+  eq $map (E L, A) = $map (L, A m(E)) .
+endfm
