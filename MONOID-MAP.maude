@@ -1,0 +1,69 @@
+*** Monoid theory
+fth MONOID is 
+ including TRIV .
+ op 1 : -> Elt . 
+ op __ : Elt Elt -> Elt [assoc id: 1] .  
+endfth
+
+*** extends MONOID with a subsort relationship
+fth MONOID+ is 
+ including MONOID .
+ sort El .
+ subsort El < Elt . 
+endfth
+
+*** map operation between monoids
+fth MOP is 
+ inc MONOID+ .
+ inc MONOID * (sort Elt to Elt') .
+ op op : El -> Elt' .
+endfth
+
+
+*** the parametrized functional module LAMBDA-MAP defines the map operation between monoids
+fmod LAMBDA-MAP{X :: MOP} is
+  op map : X$Elt -> X$Elt' . 
+  op $map : X$Elt X$Elt' -> X$Elt' .
+  var L : X$Elt . 
+  var A : X$Elt' . 
+  var E : X$El .
+  eq map(L) = $map (L, 1) .
+  eq $map(1, A) = A .
+  eq $map (E L, A) = $map (L, A op(E)) .
+endfm
+
+*** 1st example: a list of nat and the successor op
+view NatList from MOP to NAT-LIST is
+  sort Elt to NatList .
+  sort Elt' to NatList .
+  sort El to Nat .
+  op 1 to nil .
+  op op to s_ .
+endv
+
+***  try reducing
+***  Maude> red map(1 2 3 4 0 9 nil) .
+fmod NAT-LIST-MAP is
+  pr LAMBDA-MAP{NatList} .
+endfm
+
+*** 2nd example: a list of strings coverted into a list of nat using length
+*** we need to define a module including both kinds of lists
+fmod STRING-NAT-LIST is
+  pr LIST{String} .
+  pr LIST{Nat} .
+endfm
+
+view StrNatList from MOP to STRING-NAT-LIST is
+  sort Elt to List{String} .
+  sort Elt' to List{Nat} .
+  sort El to String .
+  op 1 to nil .
+  op op to length .
+endv
+
+***  try reducing
+***  Maude> red map("1" "2" "3" "4" "0" "9" "8" "10" "100" nil) .
+fmod STR-NAT-LIST-MAP is
+  pr LAMBDA-MAP{StrNatList} .
+endfm
