@@ -1,0 +1,844 @@
+***
+*** Higher-Order Functions in Core Maude
+*** Based on: Rusu & Arusoaie (2017)
+*** Load with: Maude> load higher-order-core.maude
+***
+
+***
+*** ============================================================
+*** MODULE 1: SUBST
+*** ============================================================
+
+fmod SUBST is
+  protecting META-LEVEL .
+
+  op subst      : Term Term Term     -> Term .
+  op substList  : Term Term TermList -> TermList .
+  op occurs     : Term Term          -> Bool .
+  op occursList : Term TermList      -> Bool .
+  op rename     : Term               -> Term .
+
+  vars X X' T T' E : Term .
+  var  TL           : TermList .
+  var  Q            : Qid .
+
+  eq occurs(X, X) = true .
+  eq occurs(X, E) = false [owise] .
+  ceq occurs(X, Q[TL]) = occursList(X, TL)
+    if TL =/= empty .
+  eq occurs(X, 'lambda_:_[X, T']) = false .
+  ceq occurs(X, 'lambda_:_[X', T']) = occurs(X, T')
+    if X =/= X' .
+
+  eq occursList(X, empty)    = false .
+  ceq occursList(X, (E, TL)) = true
+    if occurs(X, E) .
+  ceq occursList(X, (E, TL)) = occursList(X, TL)
+    if not occurs(X, E) .
+
+  eq rename(Q[TL]) = qid(string(Q) + "'")[TL] .
+  eq rename(X)     = X [owise] .
+
+  eq subst(X, T, X) = T .
+  eq subst(X, T, E) = E [owise] .
+
+  ceq subst(X, T, Q[TL]) = Q[substList(X, T, TL)]
+    if Q =/= 'lambda_:_
+    /\ TL =/= empty .
+
+  eq subst(X, T, 'lambda_:_[X, T']) =
+     'lambda_:_[X, T'] .
+
+  ceq subst(X, T, 'lambda_:_[X', T']) =
+      'lambda_:_[X', subst(X, T, T')]
+    if X =/= X'
+    /\ not occurs(X', T) .
+
+  ceq subst(X, T, 'lambda_:_[X', T']) =
+      'lambda_:_[rename(X'), subst(X, T, subst(X', rename(X'), T'))]
+    if X =/= X'
+    /\ occurs(X', T) .
+
+  eq substList(X, T, empty)   = empty .
+  eq substList(X, T, (E, TL)) = subst(X, T, E), substList(X, T, TL) .
+
+endfm
+
+
+***
+*** ============================================================
+*** MODULE 2: ARROW
+*** apply(f, z) applies unary function f to argument z
+*** ============================================================
+
+fmod ARROW{X :: TRIV, Y :: TRIV} is
+  protecting SUBST .
+
+  sort Arrow{X,Y} .
+
+  *** [frozen(2)]: prevents Maude from reducing the body (2nd argument)
+  *** before apply gets a chance to do the substitution.
+  *** Without this, lambda n : isEven(n) reduces isEven(n) immediately.
+  op lambda_:_ : X$Elt Y$Elt -> Arrow{X,Y} [ctor frozen(2)] .
+  op apply     : Arrow{X,Y} X$Elt -> Y$Elt .
+
+  vars x z : X$Elt .
+  var y    : Y$Elt .
+
+  op ARR-ERR : -> [Y$Elt] .
+
+  eq apply(lambda x : y, z) =
+    downTerm(subst(upTerm(x), upTerm(z), upTerm(y)), ARR-ERR) .
+
+endfm
+
+
+***
+*** ============================================================
+*** MODULE 3: BINFUN
+*** apply2(f, vx, va) applies binary function f
+*** ============================================================
+
+fmod BINFUN{X :: TRIV, Y :: TRIV} is
+  protecting SUBST .
+
+  sort BinFun{X,Y} .
+
+  *** [frozen(3)]: prevents reduction of the body (3rd argument).
+  op blambda_,_:_ : X$Elt Y$Elt Y$Elt -> BinFun{X,Y} [ctor frozen(3)] .
+  op apply2       : BinFun{X,Y} X$Elt Y$Elt -> Y$Elt .
+
+  var x    : X$Elt .
+  var acc  : Y$Elt .
+  var body : Y$Elt .
+  var vx   : X$Elt .
+  var va   : Y$Elt .
+
+  op BIN-ERR : -> [Y$Elt] .
+
+  eq apply2(blambda x , acc : body, vx, va) =
+    downTerm(
+      subst(upTerm(acc), upTerm(va),
+        subst(upTerm(x), upTerm(vx), upTerm(body))),
+      BIN-ERR) .
+
+endfm
+
+
+***
+*** ============================================================
+*** MODULE 4: MAP-LIST
+*** ============================================================
+
+fmod MAP-LIST{X :: TRIV, Y :: TRIV} is
+  protecting ARROW{X,Y} .
+  protecting LIST{X} .
+  protecting LIST{Y} .
+
+  op map : Arrow{X,Y} List{X} -> List{Y} .
+
+  var f : Arrow{X,Y} .
+  var e : X$Elt .
+  var l : List{X} .
+
+  eq map(f, nil)  = nil .
+  eq map(f, e l)  = append(apply(f, e), map(f, l)) .
+
+endfm
+
+
+***
+*** ============================================================
+*** MODULE 5: FILTER-LIST
+*** ============================================================
+
+fmod FILTER-LIST{X :: TRIV} is
+  protecting ARROW{X,Bool} .
+  protecting LIST{X} .
+
+  op filter : Arrow{X,Bool} List{X} -> List{X} .
+
+  var f : Arrow{X,Bool} .
+  var e : X$Elt .
+  var l : List{X} .
+
+  eq  filter(f, nil)  = nil .
+  ceq filter(f, e l)  = e filter(f, l) if apply(f, e) == true .
+  eq  filter(f, e l)  = filter(f, l) [owise] .
+
+endfm
+
+
+***
+*** ============================================================
+*** MODULE 6: REDUCE-LIST
+*** ============================================================
+
+fmod REDUCE-LIST{X :: TRIV, Y :: TRIV} is
+  protecting BINFUN{X,Y} .
+  protecting LIST{X} .
+
+  op reduce : BinFun{X,Y} Y$Elt List{X} -> Y$Elt .
+
+  var f   : BinFun{X,Y} .
+  var acc : Y$Elt .
+  var e   : X$Elt .
+  var l   : List{X} .
+
+  eq reduce(f, acc, nil)  = acc .
+  eq reduce(f, acc, e l)  = reduce(f, apply2(f, e, acc), l) .
+
+endfm
+
+
+***
+*** ============================================================
+*** MODULE 7: COMPOSE
+*** ============================================================
+
+fmod COMPOSE{X :: TRIV, Y :: TRIV, Z :: TRIV} is
+  protecting ARROW{X,Y} * (op ARR-ERR to ARR-ERR-XY) .
+  protecting ARROW{Y,Z} * (op ARR-ERR to ARR-ERR-YZ) .
+  protecting ARROW{X,Z} * (op ARR-ERR to ARR-ERR-XZ) .
+
+  op _o_ : Arrow{Y,Z} Arrow{X,Y} -> Arrow{X,Z} .
+
+  var x : X$Elt .
+  var f : Arrow{Y,Z} .
+  var g : Arrow{X,Y} .
+
+  eq apply(f o g, x) = apply(f, apply(g, x)) .
+
+endfm
+
+
+***
+*** ============================================================
+*** MODULE 8: INT-LIST
+*** Explicit integer list to avoid ambiguity with NatList.
+*** We define our own list sort with explicit constructor cons
+*** so that Maude cannot confuse it with the prelude NatList.
+*** ============================================================
+
+fmod INT-LIST is
+  protecting INT .
+
+  sort IntList .
+
+  *** nil is the empty list
+  op nil : -> IntList [ctor] .
+
+  *** cons(head, tail) prepends an element
+  op cons : Int IntList -> IntList [ctor] .
+
+  *** size for testing
+  op size : IntList -> Nat .
+  eq size(nil)        = 0 .
+  eq size(cons(x, l)) = size(l) + 1 .
+
+  var x : Int .
+  var l : IntList .
+endfm
+
+
+***
+*** ============================================================
+*** MODULE 9: TRIV-INT
+*** View connecting TRIV to INT, needed for parametrisation.
+*** ============================================================
+
+view VInt from TRIV to INT is
+  sort Elt to Int .
+endv
+
+
+***
+*** ============================================================
+*** MODULE 10: ILIST — IntList as TRIV instance
+*** We define a theory for IntList so we can parametrise on it.
+*** ============================================================
+
+fmod IMAP is
+  protecting ARROW{VInt,VInt} .
+  protecting INT-LIST .
+
+  op imap : Arrow{VInt,VInt} IntList -> IntList .
+
+  var f : Arrow{VInt,VInt} .
+  var e : Int .
+  var l : IntList .
+
+  eq imap(f, nil)        = nil .
+  eq imap(f, cons(e, l)) = cons(apply(f, e), imap(f, l)) .
+endfm
+
+fmod IFILTER is
+  protecting ARROW{VInt,Bool} .
+  protecting INT-LIST .
+
+  op ifilter : Arrow{VInt,Bool} IntList -> IntList .
+
+  var f : Arrow{VInt,Bool} .
+  var e : Int .
+  var l : IntList .
+
+  eq  ifilter(f, nil)        = nil .
+  ceq ifilter(f, cons(e, l)) = cons(e, ifilter(f, l))
+    if apply(f, e) == true .
+  eq  ifilter(f, cons(e, l)) = ifilter(f, l) [owise] .
+endfm
+
+fmod IREDUCE is
+  protecting BINFUN{VInt,VInt} .
+  protecting INT-LIST .
+
+  op ireduce : BinFun{VInt,VInt} Int IntList -> Int .
+
+  var f   : BinFun{VInt,VInt} .
+  var acc : Int .
+  var e   : Int .
+  var l   : IntList .
+
+  eq ireduce(f, acc, nil)        = acc .
+  eq ireduce(f, acc, cons(e, l)) = ireduce(f, apply2(f, e, acc), l) .
+endfm
+
+
+***
+*** ============================================================
+*** MODULE 11: EXAMPLES
+*** ============================================================
+
+fmod EXAMPLES is
+  protecting IMAP .
+  protecting IFILTER .
+  protecting IREDUCE .
+
+  *** n and m are Maude variables used as lambda formal parameters.
+  *** upTerm(n) produces 'n:Int (a Variable) — subst replaces it correctly.
+  *** This is the key: lambda params must be Maude variables, not constants.
+  vars n m : Int .
+
+  op isEven     : Int -> Arrow{VInt,Bool} .
+  op addOne     : Int -> Arrow{VInt,VInt} .
+  op double     : Int -> Arrow{VInt,VInt} .
+  op isPositive : Int -> Arrow{VInt,Bool} .
+  op plus       : Int Int -> BinFun{VInt,VInt} .
+  op times      : Int Int -> BinFun{VInt,VInt} .
+  var k : Int .
+
+  *** isEvenAux: use conditional equations to prevent reduction on variables.
+  *** Symbolic isEvenAux(n) will not reduce, but isEvenAux(2) will.
+  op isEvenAux : Int -> Bool .
+  ceq isEvenAux(k) = true if k rem 2 == 0 .
+  ceq isEvenAux(k) = false if k rem 2 == 1 or k rem 2 == -1 .
+
+  eq isEven(n)     = lambda n : isEvenAux(n) .
+  eq addOne(n)     = lambda n : n + 1 .
+  eq double(n)     = lambda n : n * 2 .
+  eq isPositive(n) = lambda n : n > 0 .
+  eq plus(n, m)    = blambda n , m : n + m .
+  eq times(n, m)   = blambda n , m : n * m .
+
+  *** Handy list builder
+  op list123   : -> IntList .
+  op list12345 : -> IntList .
+  op listMixed : -> IntList .
+  op list123456 : -> IntList .
+
+  eq list123    = cons(1, cons(2, cons(3, nil))) .
+  eq list12345  = cons(1, cons(2, cons(3, cons(4, cons(5, nil))))) .
+  eq listMixed  = cons(-2, cons(-1, cons(0, cons(1, cons(2, cons(3, nil)))))) .
+  eq list123456 = cons(1, cons(2, cons(3, cons(4, cons(5, cons(6, nil)))))) .
+
+endfm
+
+***
+*** TEST REDUCTIONS:
+***
+*** red in EXAMPLES : imap(addOne(n), list123) .
+***   expected: cons(2, cons(3, cons(4, nil)))
+***
+*** red in EXAMPLES : imap(double(n), list123) .
+***   expected: cons(2, cons(4, cons(6, nil)))
+***
+*** red in EXAMPLES : ifilter(isPositive(n), listMixed) .
+***   expected: cons(1, cons(2, cons(3, nil)))
+***
+*** red in EXAMPLES : ifilter(isEven(n), list123456) .
+***   expected: cons(2, cons(4, cons(6, nil)))
+***
+*** red in EXAMPLES : ireduce(plus(n, m), 0, list12345) .
+***   expected: 15
+***
+*** red in EXAMPLES : ireduce(times(n, m), 1, list12345) .
+***   expected: 120
+***
+
+***
+*** TEST REDUCTIONS:
+***
+*** red in EXAMPLES : map(addOne, 1 2 3) .
+***   expected: 2 3 4
+***
+*** red in EXAMPLES : map(double, 1 2 3) .
+***   expected: 2 4 6
+***
+*** red in EXAMPLES : filter(isPositive, -2 -1 0 1 2 3) .
+***   expected: 1 2 3
+***
+*** red in EXAMPLES : filter(isEven, 1 2 3 4 5 6) .
+***   expected: 2 4 6
+***
+*** red in EXAMPLES : reduce(plus, 0, 1 2 3 4 5) .
+***   expected: 15
+***
+*** red in EXAMPLES : reduce(times, 1, 1 2 3 4 5) .
+***   expected: 120
+***
+
+
+
+***
+*** ============================================================
+*** PART 2: ABSTRACT COLLECTION THEORY
+*** ============================================================
+***
+*** Design choice: three separate theories instead of one,
+*** each providing the minimum interface needed.
+*** This avoids the problem of having multiple function sorts
+*** in a single theory, which Core Maude cannot handle cleanly.
+***
+
+
+***
+*** ============================================================
+*** THEORY: MAPPABLE
+*** A container whose elements can be transformed by a function.
+*** ============================================================
+
+fth MAPPABLE is
+  including BOOL .
+  sorts Elt Coll Fun .
+
+  op empty   : -> Coll .
+  op insert  : Elt Coll -> Coll .
+  op pick    : Coll -> Elt .
+  op rest    : Coll -> Coll .
+  op isEmpty : Coll -> Bool .
+  op applyF  : Fun Elt -> Elt .
+endfth
+
+
+***
+*** ============================================================
+*** THEORY: FILTERABLE
+*** A container whose elements can be filtered by a predicate.
+*** ============================================================
+
+fth FILTERABLE is
+  including BOOL .
+  sorts Elt Coll PFun .
+
+  op empty   : -> Coll .
+  op insert  : Elt Coll -> Coll .
+  op pick    : Coll -> Elt .
+  op rest    : Coll -> Coll .
+  op isEmpty : Coll -> Bool .
+  op applyP  : PFun Elt -> Bool .
+endfth
+
+
+***
+*** ============================================================
+*** THEORY: REDUCIBLE
+*** A container whose elements can be folded by a binary function.
+*** ============================================================
+
+fth REDUCIBLE is
+  including BOOL .
+  sorts Elt Coll BFun .
+
+  op empty   : -> Coll .
+  op insert  : Elt Coll -> Coll .
+  op pick    : Coll -> Elt .
+  op rest    : Coll -> Coll .
+  op isEmpty : Coll -> Bool .
+  op applyB  : BFun Elt Elt -> Elt .
+endfth
+
+
+***
+*** ============================================================
+*** GENERIC MAP
+*** Uses isEmpty/pick/rest for traversal — works for any container
+*** including AC ones like Set where insert reduces immediately.
+*** ============================================================
+
+fmod CMAP{C :: MAPPABLE} is
+
+  op cmap : C$Fun C$Coll -> C$Coll .
+
+  var f : C$Fun .
+  var c : C$Coll .
+
+  eq cmap(f, empty) = empty .
+  ceq cmap(f, c)    = insert(applyF(f, pick(c)), cmap(f, rest(c)))
+    if not isEmpty(c) .
+
+endfm
+
+
+***
+*** ============================================================
+*** GENERIC FILTER
+*** ============================================================
+
+fmod CFILTER{C :: FILTERABLE} is
+
+  op cfilter : C$PFun C$Coll -> C$Coll .
+
+  var f : C$PFun .
+  var c : C$Coll .
+
+  eq  cfilter(f, empty) = empty .
+  ceq cfilter(f, c)     = insert(pick(c), cfilter(f, rest(c)))
+    if not isEmpty(c) /\ applyP(f, pick(c)) == true .
+  ceq cfilter(f, c)     = cfilter(f, rest(c))
+    if not isEmpty(c) /\ applyP(f, pick(c)) == false .
+
+endfm
+
+
+***
+*** ============================================================
+*** GENERIC REDUCE
+*** ============================================================
+
+fmod CREDUCE{C :: REDUCIBLE} is
+
+  op creduce : C$BFun C$Elt C$Coll -> C$Elt .
+
+  var f   : C$BFun .
+  var acc : C$Elt .
+  var c   : C$Coll .
+
+  eq  creduce(f, acc, empty) = acc .
+  ceq creduce(f, acc, c)     = creduce(f, applyB(f, pick(c), acc), rest(c))
+    if not isEmpty(c) .
+
+endfm
+
+
+***
+*** ============================================================
+*** INT-LIST-OPS: head/tail/isEmpty for cons-based IntList
+*** ============================================================
+
+fmod INT-LIST-OPS is
+  protecting INT-LIST .
+
+  op ilHead    : IntList -> Int .
+  op ilTail    : IntList -> IntList .
+  op ilIsEmpty : IntList -> Bool .
+
+  var e : Int .
+  var l : IntList .
+
+  eq ilHead(cons(e, l))    = e .
+  eq ilTail(cons(e, l))    = l .
+  eq ilIsEmpty(nil)        = true .
+  eq ilIsEmpty(cons(e, l)) = false .
+endfm
+
+
+***
+*** ============================================================
+*** INTLIST-AS-MAPPABLE
+*** Connects IntList and Arrow{VInt,VInt} to theory MAPPABLE.
+*** ============================================================
+
+fmod INTLIST-AS-MAPPABLE is
+  protecting INT-LIST-OPS .
+  protecting ARROW{VInt,VInt} .
+
+  op ilApplyF : Arrow{VInt,VInt} Int -> Int .
+
+  var f : Arrow{VInt,VInt} .
+  var e : Int .
+
+  eq ilApplyF(f, e) = apply(f, e) .
+endfm
+
+view IntListMappable from MAPPABLE to INTLIST-AS-MAPPABLE is
+  sort Elt  to Int .
+  sort Coll to IntList .
+  sort Fun  to Arrow{VInt,VInt} .
+
+  op empty             to nil .
+  op insert(E:Elt, C:Coll) to term cons(E:Int, C:IntList) .
+  op pick(C:Coll)      to term ilHead(C:IntList) .
+  op rest(C:Coll)      to term ilTail(C:IntList) .
+  op isEmpty(C:Coll)   to term ilIsEmpty(C:IntList) .
+  op applyF(F:Fun, E:Elt) to term ilApplyF(F:Arrow{VInt,VInt}, E:Int) .
+endv
+
+
+***
+*** ============================================================
+*** INTLIST-AS-FILTERABLE
+*** Connects IntList and Arrow{VInt,Bool} to theory FILTERABLE.
+*** ============================================================
+
+fmod INTLIST-AS-FILTERABLE is
+  protecting INT-LIST-OPS .
+  protecting ARROW{VInt,Bool} .
+
+  op ilApplyP : Arrow{VInt,Bool} Int -> Bool .
+
+  var f : Arrow{VInt,Bool} .
+  var e : Int .
+
+  eq ilApplyP(f, e) = apply(f, e) .
+endfm
+
+view IntListFilterable from FILTERABLE to INTLIST-AS-FILTERABLE is
+  sort Elt  to Int .
+  sort Coll to IntList .
+  sort PFun to Arrow{VInt,Bool} .
+
+  op empty             to nil .
+  op insert(E:Elt, C:Coll) to term cons(E:Int, C:IntList) .
+  op pick(C:Coll)      to term ilHead(C:IntList) .
+  op rest(C:Coll)      to term ilTail(C:IntList) .
+  op isEmpty(C:Coll)   to term ilIsEmpty(C:IntList) .
+  op applyP(F:PFun, E:Elt) to term ilApplyP(F:Arrow{VInt,Bool}, E:Int) .
+endv
+
+
+***
+*** ============================================================
+*** INTLIST-AS-REDUCIBLE
+*** Connects IntList and BinFun{VInt,VInt} to theory REDUCIBLE.
+*** ============================================================
+
+fmod INTLIST-AS-REDUCIBLE is
+  protecting INT-LIST-OPS .
+  protecting BINFUN{VInt,VInt} .
+
+  op ilApplyB : BinFun{VInt,VInt} Int Int -> Int .
+
+  var f   : BinFun{VInt,VInt} .
+  var e   : Int .
+  var acc : Int .
+
+  eq ilApplyB(f, e, acc) = apply2(f, e, acc) .
+endfm
+
+view IntListReducible from REDUCIBLE to INTLIST-AS-REDUCIBLE is
+  sort Elt  to Int .
+  sort Coll to IntList .
+  sort BFun to BinFun{VInt,VInt} .
+
+  op empty             to nil .
+  op insert(E:Elt, C:Coll) to term cons(E:Int, C:IntList) .
+  op pick(C:Coll)      to term ilHead(C:IntList) .
+  op rest(C:Coll)      to term ilTail(C:IntList) .
+  op isEmpty(C:Coll)   to term ilIsEmpty(C:IntList) .
+  op applyB(F:BFun, E:Elt, A:Elt) to term ilApplyB(F:BinFun{VInt,VInt}, E:Int, A:Int) .
+endv
+
+
+***
+*** ============================================================
+*** INT-SET-OPS: pick/rest/isEmpty/insert for Set{Int}
+*** The operator _,_ for sets conflicts with argument separation,
+*** so we use named ops and quote the operator where needed.
+*** ============================================================
+
+fmod INT-SET-OPS is
+  protecting SET{Int} .
+  protecting META-LEVEL .
+  protecting ARROW{VInt,VInt} .
+  protecting ARROW{VInt,Bool} .
+  protecting BINFUN{VInt,VInt} .
+
+  op sInsert   : Int Set{Int} -> Set{Int} .
+  op sPick     : NeSet{Int} -> Int .
+  op sRest     : NeSet{Int} -> Set{Int} .
+  op sIsEmpty  : Set{Int} -> Bool .
+  op sApplyF   : Arrow{VInt,VInt} Int -> Int .
+  op sApplyP   : Arrow{VInt,Bool} Int -> Bool .
+  op sApplyB   : BinFun{VInt,VInt} Int Int -> Int .
+
+  op isSetTerm    : Term -> Bool .
+  op termHead     : Term -> Term .
+  op reduceInINT  : Term -> Term .
+  op pickFromMeta : NeSet{Int} -> Int .
+
+  var ei  : Int .
+  var si  : Set{Int} .
+  var ni  : NeSet{Int} .
+  var f   : Arrow{VInt,VInt} .
+  var fp  : Arrow{VInt,Bool} .
+  var fb  : BinFun{VInt,VInt} .
+  var ai  : Int .
+  var T T1 : Term .
+  var TL NTL : TermList .
+  var Q   : Qid .
+
+  eq sInsert(ei, si) = insert(ei, si) .
+
+  *** isSetTerm: true when upTerm has _`,_ as head
+  eq isSetTerm('_`,_[TL]) = true .
+  eq isSetTerm(T)         = false [owise] .
+
+  *** termHead: extract first element from a _`,_[T1, TL] term
+  eq termHead('_`,_[(T1, TL)]) = T1 .
+  eq termHead(T)               = T [owise] .
+
+  *** reduceInINT: reduce a meta-term in INT to get its Int value
+  eq reduceInINT(T) =
+    getTerm(metaReduce(upModule('INT, false), T)) .
+
+  *** pickFromMeta: get first element of multi-set via metalevel
+  eq pickFromMeta(ni) =
+    downTerm(reduceInINT(termHead(upTerm(ni))), 0) .
+
+  *** sPick:
+  ***   singleton (Int < NeSet{Int}): return ni directly
+  ***   multi-element: pick via metalevel
+  eq sPick(ni) =
+    if isSetTerm(upTerm(ni))
+    then pickFromMeta(ni)
+    else ni
+    fi .
+
+  *** sRest:
+  ***   singleton: empty
+  ***   multi: delete picked element
+  eq sRest(ni) =
+    if isSetTerm(upTerm(ni))
+    then delete(pickFromMeta(ni), ni)
+    else empty
+    fi .
+
+  eq sIsEmpty(empty) = true .
+  eq sIsEmpty(ni)    = false .
+
+  eq sApplyF(f, ei)      = apply(f, ei) .
+  eq sApplyP(fp, ei)     = apply(fp, ei) .
+  eq sApplyB(fb, ei, ai) = apply2(fb, ei, ai) .
+
+endfm
+
+
+
+***
+*** ============================================================
+*** VIEWS for Set{Int}
+*** ============================================================
+
+view IntSetMappable from MAPPABLE to INT-SET-OPS is
+  sort Elt  to Int .
+  sort Coll to Set{Int} .
+  sort Fun  to Arrow{VInt,VInt} .
+
+  op empty             to empty .
+  op insert(E:Elt, C:Coll) to term sInsert(E:Int, C:Set{Int}) .
+  op pick(C:Coll)      to term sPick(C:Set{Int}) .
+  op rest(C:Coll)      to term sRest(C:Set{Int}) .
+  op isEmpty(C:Coll)   to term sIsEmpty(C:Set{Int}) .
+  op applyF(F:Fun, E:Elt) to term sApplyF(F:Arrow{VInt,VInt}, E:Int) .
+endv
+
+view IntSetFilterable from FILTERABLE to INT-SET-OPS is
+  sort Elt  to Int .
+  sort Coll to Set{Int} .
+  sort PFun to Arrow{VInt,Bool} .
+
+  op empty             to empty .
+  op insert(E:Elt, C:Coll) to term sInsert(E:Int, C:Set{Int}) .
+  op pick(C:Coll)      to term sPick(C:Set{Int}) .
+  op rest(C:Coll)      to term sRest(C:Set{Int}) .
+  op isEmpty(C:Coll)   to term sIsEmpty(C:Set{Int}) .
+  op applyP(F:PFun, E:Elt) to term sApplyP(F:Arrow{VInt,Bool}, E:Int) .
+endv
+
+view IntSetReducible from REDUCIBLE to INT-SET-OPS is
+  sort Elt  to Int .
+  sort Coll to Set{Int} .
+  sort BFun to BinFun{VInt,VInt} .
+
+  op empty             to empty .
+  op insert(E:Elt, C:Coll) to term sInsert(E:Int, C:Set{Int}) .
+  op pick(C:Coll)      to term sPick(C:Set{Int}) .
+  op rest(C:Coll)      to term sRest(C:Set{Int}) .
+  op isEmpty(C:Coll)   to term sIsEmpty(C:Set{Int}) .
+  op applyB(F:BFun, E:Elt, A:Elt) to term sApplyB(F:BinFun{VInt,VInt}, E:Int, A:Int) .
+endv
+
+
+***
+*** ============================================================
+*** INSTANTIATIONS: derive concrete modules from generic ones
+*** ============================================================
+
+fmod INTLIST-MAP    is protecting CMAP{IntListMappable} .       endfm
+fmod INTLIST-FILTER is protecting CFILTER{IntListFilterable} .  endfm
+fmod INTLIST-REDUCE is protecting CREDUCE{IntListReducible} .   endfm
+
+fmod INTSET-MAP    is protecting CMAP{IntSetMappable} .         endfm
+fmod INTSET-FILTER is protecting CFILTER{IntSetFilterable} .    endfm
+fmod INTSET-REDUCE is protecting CREDUCE{IntSetReducible} .     endfm
+
+
+***
+*** ============================================================
+*** EXAMPLES-COLL
+*** ============================================================
+
+fmod EXAMPLES-COLL is
+  protecting EXAMPLES .
+  protecting INTLIST-MAP .
+  protecting INTLIST-FILTER .
+  protecting INTLIST-REDUCE .
+  protecting INTSET-MAP .
+  protecting INTSET-FILTER .
+  protecting INTSET-REDUCE .
+
+  op set12345  : -> Set{Int} .
+  op setMixed  : -> Set{Int} .
+  op set123456 : -> Set{Int} .
+
+  eq set12345  = 1 , 2 , 3 , 4 , 5 .
+  eq setMixed  = -1 , 0 , 1 , 2 , 3 .
+  eq set123456 = 1 , 2 , 3 , 4 , 5 , 6 .
+
+  vars p q : Int .
+
+endfm
+
+***
+*** TEST REDUCTIONS (after loading):
+*** Variables n, m, p, q are declared in EXAMPLES/EXAMPLES-COLL.
+*** Use them directly in red commands within those modules.
+***
+*** --- IntList (use EXAMPLES module which declares vars n m)
+*** red in EXAMPLES : imap(addOne(n), list123) .
+*** red in EXAMPLES : imap(double(n), list123) .
+*** red in EXAMPLES : ifilter(isPositive(n), listMixed) .
+*** red in EXAMPLES : ifilter(isEven(n), list123456) .
+*** red in EXAMPLES : ireduce(plus(n,m), 0, list12345) .
+*** red in EXAMPLES : ireduce(times(n,m), 1, list12345) .
+***
+*** --- Set and List via generic COLLECTION (use EXAMPLES-COLL, vars p q)
+*** red in EXAMPLES-COLL : cmap(addOne(p), list123) .
+*** red in EXAMPLES-COLL : cfilter(isPositive(p), listMixed) .
+*** red in EXAMPLES-COLL : creduce(plus(p,q), 0, list12345) .
+*** red in EXAMPLES-COLL : ifilter(isEven(p), list123456) .
+*** red in EXAMPLES-COLL : cmap(addOne(p), set12345) .
+*** red in EXAMPLES-COLL : cfilter(isPositive(p), setMixed) .
+*** red in EXAMPLES-COLL : creduce(plus(p,q), 0, set12345) .
+*** red in EXAMPLES-COLL : cfilter(isEven(p), set123456) .
+***
