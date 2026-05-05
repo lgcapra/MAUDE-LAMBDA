@@ -1,0 +1,21 @@
+*** Monoid theory (variants)
+
+fth MONOID is 
+ sort Elt .
+ op nil : -> Elt . 
+ op _;_ : Elt Elt -> Elt [assoc id: nil] .  
+endfth
+
+*** extends MONOID with a subsort relationship
+fth MONOID+ is 
+ including MONOID .
+ sort El .
+ subsort El < Elt . 
+endfth
+
+*** commutative monoid 
+fth C-MONOID is
+   sort Elt . 
+   op 0 : -> Elt . 
+   op _+_ : Elt Elt -> Elt [assoc comm id: 0] . 
+endfth

@@ -1,0 +1,122 @@
+fmod SUBST is
+  protecting META-LEVEL .
+
+  op subst      : Term Term Term     -> Term .
+  op substList  : Term Term TermList -> TermList .
+  op occurs     : Term Term          -> Bool .
+  op occursList : Term TermList      -> Bool .
+  op rename     : Term               -> Term .
+
+  vars X X' T T' E : Term .
+  var  TL           : TermList .
+  var  Q            : Qid .
+
+  eq occurs(X, X) = true .
+  eq occurs(X, E) = false [owise] .
+  ceq occurs(X, Q[TL]) = occursList(X, TL)
+    if TL =/= empty .
+  eq occurs(X, 'lambda_:_[X, T']) = false .
+  ceq occurs(X, 'lambda_:_[X', T']) = occurs(X, T')
+    if X =/= X' .
+
+  eq occursList(X, empty)    = false .
+  ceq occursList(X, (E, TL)) = true
+    if occurs(X, E) .
+  ceq occursList(X, (E, TL)) = occursList(X, TL)
+    if not occurs(X, E) .
+
+  eq rename(Q[TL]) = qid(string(Q) + "'")[TL] .
+  eq rename(X)     = X [owise] .
+
+  eq subst(X, T, X) = T .
+  eq subst(X, T, E) = E [owise] .
+
+  ceq subst(X, T, Q[TL]) = Q[substList(X, T, TL)]
+    if Q =/= 'lambda_:_
+    /\ TL =/= empty .
+
+  eq subst(X, T, 'lambda_:_[X, T']) =
+     'lambda_:_[X, T'] .
+
+  ceq subst(X, T, 'lambda_:_[X', T']) =
+      'lambda_:_[X', subst(X, T, T')]
+    if X =/= X'
+    /\ not occurs(X', T) .
+
+  ceq subst(X, T, 'lambda_:_[X', T']) =
+      'lambda_:_[rename(X'), subst(X, T, subst(X', rename(X'), T'))]
+    if X =/= X'
+    /\ occurs(X', T) .
+
+  eq substList(X, T, empty)   = empty .
+  eq substList(X, T, (E, TL)) = subst(X, T, E), substList(X, T, TL) .
+
+endfm
+
+
+***
+*** ============================================================
+*** MODULE 2: ARROW
+*** apply(f, z) applies unary function f to argument z
+*** ============================================================
+
+fmod ARROW{X :: TRIV, Y :: TRIV} is
+protecting META-LEVEL .
+  protecting SUBST .
+
+  sort Arrow{X,Y} .
+
+  *** [frozen(2)]: prevents Maude from reducing the body (2nd argument)
+  *** before apply gets a chance to do the substitution.
+  *** Without this, lambda n : isEven(n) reduces isEven(n) immediately.
+  op lambda_:_ : X$Elt Y$Elt -> Arrow{X,Y} [ctor frozen(2)] .
+  op apply     : Arrow{X,Y} X$Elt -> Y$Elt .
+
+  vars x z : X$Elt .
+  var y    : Y$Elt .
+
+  op ARR-ERR : -> [Y$Elt] .
+
+  eq apply(lambda x : y, z) =
+   downTerm(subst(upTerm(x), upTerm(z), upTerm(y)), ARR-ERR) .
+
+endfm
+
+
+***
+*** ============================================================
+*** MODULE 4: MAP-LIST
+*** ============================================================
+
+fmod MAP-LIST{X :: TRIV, Y :: TRIV} is
+  protecting ARROW{X,Y} .
+  protecting LIST{X} .
+  protecting LIST{Y} .
+
+  op map : Arrow{X,Y} List{X} -> List{Y} .
+
+  var f : Arrow{X,Y} .
+  var e : X$Elt .
+  var l : List{X} .
+
+  eq map(f, nil)  = nil .
+  eq map(f, e l)  = append(apply(f, e), map(f, l)) .
+
+endfm
+
+*** red in EX : map(addOne(n), (1 2 3)) . 
+fmod EX is
+  protecting MAP-LIST{Nat, String} * (sort List{Nat} to NatList, sort NeList{Nat} to NeNatList) .
+  protecting CONVERSION .
+  op addOne     : Nat -> Arrow{Nat,String} .
+  var n : Nat .
+  eq addOne(n)   = lambda n : string(n,10)  .
+endfm
+
+*** red in EX2 : map(addOne(n), (1 2 3)) .
+fmod EX2 is
+  protecting MAP-LIST{Nat, Nat} * (sort List{Nat} to NatList, sort NeList{Nat} to NeNatList) .
+  op addOne     : Nat -> Arrow{Nat,Nat} .
+  var n : Nat .
+  eq addOne(n)   = lambda n : n + 1  .
+endfm

@@ -1,0 +1,99 @@
+in MONOID
+
+*** map operation between monoids
+fth MOP is 
+ inc MONOID+ .
+ inc MONOID * (sort Elt to Elt') .
+ op op : El -> Elt' .
+endfth
+
+*** the parametrized functional module LAMBDA-MAP defines the map operation between monoids
+fmod LAMBDA-MAP{X :: MOP} is
+  op map : X$Elt -> X$Elt' . 
+  op $map : X$Elt X$Elt' -> X$Elt' .
+  var L : X$Elt . 
+  var A : X$Elt' . 
+  var E : X$El .
+  eq map(L) = $map (L, nil) .
+  eq $map(nil, A) = A .
+  eq $map (E ; L, A) = $map (L, A ; op(E)) .
+endfm
+
+*** 1st example: a list of nat and the successor op
+view NatList from MOP to NAT-LIST is
+  sort Elt to NatList .
+  sort Elt' to NatList .
+  sort El to Nat .
+  op _;_ to __ .
+  op op to s_ .
+endv
+
+***  try reducing
+***  Maude> red map(nil 2 3 4 0 9 nil) .
+fmod NAT-LIST-MAP is
+  pr LAMBDA-MAP{NatList} .
+endfm
+
+
+*** 2nd example: a list of strings coverted into a list of nat using length
+*** we need to define a module including both kinds of lists
+fmod STRING-NAT-LIST is
+  pr LIST{String} .
+  pr LIST{Nat} .
+endfm
+
+*** --------------- NEW 1 ---------------
+fth MAP is 
+ sort El .
+ sort El' .
+ op map : El -> El' .
+endfth
+
+
+view StrNatList from MOP to STRING-NAT-LIST is
+  sort Elt to List{String} .
+  sort Elt' to List{Nat} .
+  sort El to String .
+  op _;_ to __ .
+  op op to length .
+endv
+
+***  try reducing
+***  Maude> red map("nil" "2" "3" "4" "0" "9" "8" "10" "100" nil) .
+fmod STR-NAT-LIST-MAP is
+  pr LAMBDA-MAP{StrNatList} .
+endfm
+*** ------------------------------------
+
+
+
+
+*** --------------- NEW 2 ---------------
+*** variant of 1st example: a list of nat and the 3rd successor
+view NatList+3 from MOP to NAT-LIST is
+  sort Elt to NatList .
+  sort Elt' to NatList .
+  sort El to Nat .
+  op _;_ to __ .
+  op op(X:El) to term X:Nat + 3 .
+endv
+
+***  try reducing
+***  Maude> red map(nil 2 3 4 0 9 nil) .
+fmod NAT-LIST-MAP is
+  pr LAMBDA-MAP{NatList+3} .
+endfm
+*** ------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+*** ------------------------------------

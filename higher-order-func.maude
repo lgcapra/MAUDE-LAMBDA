@@ -133,7 +133,7 @@ endfm
 fmod MAP-LIST{X :: TRIV, Y :: TRIV} is
   protecting ARROW{X,Y} .
   protecting LIST{X} .
-  protecting LIST{Y} .
+  protecting LIST{Y} * (op nil to nil' ) .
 
   op map : Arrow{X,Y} List{X} -> List{Y} .
 
@@ -141,7 +141,7 @@ fmod MAP-LIST{X :: TRIV, Y :: TRIV} is
   var e : X$Elt .
   var l : List{X} .
 
-  eq map(f, nil)  = nil .
+  eq map(f, nil)  = nil' .
   eq map(f, e l)  = append(apply(f, e), map(f, l)) .
 
 endfm
@@ -351,6 +351,17 @@ fmod EXAMPLES is
   eq listMixed  = cons(-2, cons(-1, cons(0, cons(1, cons(2, cons(3, nil)))))) .
   eq list123456 = cons(1, cons(2, cons(3, cons(4, cons(5, cons(6, nil)))))) .
 
+endfm
+
+
+
+
+*** red in EX : map(addOne(n), (1 2 3))
+fmod EX is
+  protecting MAP-LIST{Nat, String} .
+  op addOne     : Nat -> Arrow{Nat,String} .
+  var n : Nat .
+  eq addOne(n)   = lambda n : ""  .
 endfm
 
 ***
