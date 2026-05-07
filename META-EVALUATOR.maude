@@ -1,0 +1,71 @@
+fmod UNIVERSAL-EVAL is
+  protecting META-LEVEL .
+  --- Parameters: Module, OpName, List of Arguments
+  op applyAny : Module Qid TermList -> Term .
+  
+  vars M : Module .
+  var Op : Qid .
+  var TL : TermList .
+  --- Construct the term using the operator and the list
+  eq applyAny(M, Op, TL) =  getTerm(metaReduce(M, Op[TL])) .
+endfm
+
+fmod TRIP-MODULE is
+  sort Value .
+  ops a b c d : -> Value [ctor] .
+  op combine : Value Value Value -> Value .
+  
+  vars V1 V2 : Value .
+  eq combine(a, b, V1) = V1 .
+  eq combine(V1, V1, V2) = V2 .
+endfm
+
+reduce in UNIVERSAL-EVAL : 
+    applyAny(
+        upModule('TRIP-MODULE, false), 
+        'combine, 
+        ('a.Value , 'a.Value , 'c.Value)
+    ) .
+
+reduce in UNIVERSAL-EVAL : 
+    applyAny(
+        upModule('NAT-LIST, false), 
+        '__, 
+        ('0.Nat ,  upTerm( 1 2) )
+    ) .
+
+--- same as above
+reduce in UNIVERSAL-EVAL : 
+    applyAny(
+        upModule('NAT-LIST, false), 
+        '__, 
+        ('0.Nat , '__['s_['0.Zero], 's_^2['0.Zero]])
+    ) .
+
+--- ALternative approach (helpful?)
+
+fth OP-INTERFACE is
+  protecting META-LEVEL .
+  op targetModule : -> Module .
+  op targetOp : -> Qid .
+  op targetArgs : -> TermList .
+endfth
+
+fmod STATIC-EVALUATOR{X :: OP-INTERFACE} is
+  protecting META-LEVEL .
+  op runEval : -> Term .
+  eq runEval = getTerm(metaReduce(targetModule, targetOp[targetArgs])) .
+endfm
+
+
+view SpecificTripView from OP-INTERFACE to (TRIP-MODULE + META-LEVEL) is
+  op targetModule to term upModule('TRIP-MODULE, false) .
+  op targetOp to term 'combine .
+  op targetArgs to term ('a.Value , 'b.Value , 'c.Value) .
+endv
+
+fmod RUN-SPECIFIC-TRIP is
+  protecting STATIC-EVALUATOR{SpecificTripView} .
+endfm
+
+reduce in RUN-SPECIFIC-TRIP : runEval .
