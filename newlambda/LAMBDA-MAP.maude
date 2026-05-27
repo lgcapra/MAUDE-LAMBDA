@@ -58,8 +58,7 @@ fmod MAP-COLL'{X :: COLLECTION', Y :: COLLECTION'} is
 
   eq map(f, l) = $map(f, l, Y$nil) .
   eq $map(f, X$nil, l') = l' .
-  --- eq $map (f, (l e), l') = $map(f, l, l' (f e)) . --- may not always work !
- ceq $map (f, l, l') = $map(f, l'', l' (f e)) if l'' e := l . 
+  eq $map (f, (l e), l') = $map(f, l, l' (f e)) . --- may not always work ! 
 endfm
 
 fmod MAP-SAME-COLL'{X :: COLLECTION'} is --- homogeneous map
