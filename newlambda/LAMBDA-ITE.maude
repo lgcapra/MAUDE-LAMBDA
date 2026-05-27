@@ -155,7 +155,6 @@ endv
 view ElistAsIte{X :: TRIV} from ITERABLE to ELIST{X} is 
   sort Coll to Elist{X} .
   sort Elt to X$Elt .
-  var Y : Elt .
   var L  : Coll .
   op nil to term [ nil ] .
   op get(L) to term head(l(L)) .
