@@ -1,196 +1,6 @@
 --- definition of higher-order map based on LAMBDA-DEF
 in LAMBDA-DEF
-
---- MONOID-based definition of map (can be generalized using "ITERABLE") ---
-in ../MONOID 
-
---- views into another TH (necessary to instantiate ARROW)
-
-view MONOID from TRIV to MONOID is
-endv
-
-view MONOID+ from TRIV to MONOID+ is
-endv
-
---- map between "monoids"
-
-fmod MAP-OP{X :: MONOID+, Y :: MONOID} is
-  protecting ARROW{MONOID+,MONOID}{X,Y} * (sort Arrow{MONOID+,MONOID}{X,Y} to Arrow{X,Y}).
-  op map : [Arrow{X,Y}] X$Elt -> [Y$Elt] .
-
-  var f : [Arrow{X,Y}] .
-  var e : X$El .
-  var l : X$Elt .
-
-  eq map(f, X$nil)  = Y$nil .
-  eq map(f, e ; l)  = (f e) ; map(f, l) .
-
-  --- eq map(f, l) = (f getFirst(l)) CONCAT map(f, getTail(l)) .
-endfm
-
---- Examples
-
-view NatList+ from MONOID+ to NAT-LIST is
-  sort Elt to NatList .
-  sort El to Nat .
-  op _;_ to __ .
-endv
-
-view StringList from MONOID to LIST{String} is
-  sort Elt to List{String} .
-  op _;_ to __ .
-endv
-
-fmod EX1 is
-  protecting MAP-OP{NatList+, StringList} .
-  protecting CONVERSION .
-  op toString  : Nat -> Arrow{NatList+,StringList} .
-  var n : Nat .
-  eq toString(n) = lambda n : string(n, 10)  .
-endfm
-
-red in EX1 : map(toString(n), (1 2 3)) . 
-
---- parameterized views (better) ---
-
-view ListAsMon+{X :: TRIV} from MONOID+ to LIST{X} is 
-  sort Elt to List{X} .
-  sort El to X$Elt .
-  op _;_ to __ .
-endv
-
-view ListAsMon{X :: TRIV} from MONOID to LIST{X} is 
-  sort Elt to List{X} .
-  op _;_ to __ .
-endv
-
-fmod EX2 is
-  protecting MAP-OP{ListAsMon+{Float}, ListAsMon{String}} .
-  protecting CONVERSION .
-  op toString  : Float -> Arrow{ListAsMon+{Float}, ListAsMon{String}} .
-  var x : Float .
-  eq toString(x) = lambda x : string(x) .
-endfm
-
-red in EX2 : map(toString(x), (1.0 2.0 3.0)) .
-
-
-*** particular (but frequent) case: map on the same structure
-
---- views into another TH (necessary to instantiate MAP-OP)
-
-view MONOID' from MONOID to MONOID+ is
-endv 
-
-view MONOID'' from MONOID+ to MONOID+ is
-endv
-
-fmod HOM-MAP-OP{X :: MONOID+, Y :: MONOID+} is
-   protecting MAP-OP{MONOID'', MONOID'}{X,Y} * (sort Arrow{MONOID'', MONOID'}{X,Y} to Arrow{X,Y}) .
-endfm
-
-fmod SIMPLE-MAP-OP{X :: MONOID+} is
-   protecting HOM-MAP-OP{X, X} * (sort Arrow{X, X} to Arrow{X}).
-endfm
-
-fmod EX3 is
-  protecting SIMPLE-MAP-OP{ListAsMon+{String}} .
-  op  double  : String -> Arrow{ListAsMon+{String}} .
-  var s : String .
-  eq double(s) = lambda s : s + s .
-  op tmpmap : List{String} String -> List{String} .
-  var ls : List{String} .
-  eq tmpmap(ls, s) = map(double(s), ls) .   
-endfm
-
-red in EX3 : map(double(s), ("uno" "due" "tre")) .
-
---- same as above
-red in EX3 : map(lambda w:String : w:String + w:String, ("uno" "due" "tre")) .
-
-red in EX3 : tmpmap("uno" "due" "tre", s) .
-
---- particular case of substitution in lambda
-reduce in EX3 : subst('X:String, upTerm(Y:String + "b"), upTerm(lambda Y:String : X:String + Y:String + "a")) .
-
---- down term of the substitution above
-reduce in EX3 : downTerm(
-                    subst('X:String, upTerm(Y:String + "b"), upTerm(lambda Y:String : X:String + Y:String + "a")),
-                     lambda Z:String : Z:String) .
-
-
---- examples of curried functions
-
-view Arrow{X :: TRIV, Y :: TRIV} from TRIV to ARROW{X,Y} is
-  sort Elt to Arrow{X,Y} .
-endv
-
-
-fmod EX-CURRIED is
-  protecting ARROW{Nat, Arrow{Nat,Nat}} .
-  protecting ARROW{Nat, Nat} .
-  vars n m : Nat .
-
-  op curryAdd : Nat Nat -> Arrow{Nat, Arrow{Nat,Nat}} .
-  eq curryAdd(n, m) = lambda n : lambda m : n + m .
-endfm
-
-red (curryAdd(n, m) 3) 4 .
-
-fmod EX-CURRIED2 is
-  protecting ARROW{Nat, Arrow{Nat,Float}} .
-  protecting ARROW{Nat, Float} .
-  protecting CONVERSION .
-  vars n m : Nat .
-
-  op curryDiv : Nat Nat -> Arrow{Nat, Arrow{Nat,Float}} .
-  eq curryDiv(n, m) = lambda n : lambda m : float(n) / float(m) .
-endfm
-
-red (curryDiv(n, m) 7) 2 .
-
-fmod EX-CURRIED3 is
-  protecting ARROW{Nat, Arrow{Nat, Arrow{Nat,Nat}}} .
-  protecting ARROW{Nat, Arrow{Nat,Nat}} .
-  protecting ARROW{Nat, Nat} .
-  vars n m k : Nat .
-
-  op curryAdd3 : Nat Nat Nat -> Arrow{Nat, Arrow{Nat, Arrow{Nat,Nat}}} .
-  eq curryAdd3(n, m, k) = lambda n : lambda m : lambda k : n + m + k .
-endfm
-
-red ((curryAdd3(n, m, k) 1) 2) 3 .
-
-fth BASESTRUCT is
- sorts Elt Coll .
- op nil : -> Coll [pconst] .
-endfth
-
---- the ITERABLE th defines the most general constraint for a given data structure to the "source" of a map operation
-fth ITERABLE is 
- including BASESTRUCT . 
- op get : Coll -> [Elt] . --- undefined on nil
- op remainder : Coll -> Coll . --- the rest of the collection, excluding the "got" element
- eq remainder(nil) = nil .  --- not used, just specifies a constraint
-endfth
-
---- the COLLECTION th is more general than MONOID because it doesn't require associativity of '__' and any subsorting 
-fth COLLECTION is
-  including ITERABLE . 
-  op __ : Coll Elt -> Coll [ctor] .
-  op __ : Coll Coll -> Coll [id: nil] . --- maybe redundant
-  var C : Coll .
-  var E : Elt .
-  eq get(C E) = E .
-  eq remainder(C E) = C .
-endfth
-
---- trivial views
-view Collection from TRIV to COLLECTION is
-endv
-
-view Iterable from TRIV to ITERABLE is
-endv
+in LAMBDA-ITE
 
 --- NOTE
 --- from a theoretical point of view, a COLLECTION is also ITERABLE, thus we could add 'get' and 'remainder' to COLLECTION
@@ -202,145 +12,56 @@ endv
 
 
 fmod MAP-ITE{X :: ITERABLE, Y :: COLLECTION} is
-  protecting ARROW{Iterable,Collection}{X,Y} * (sort Arrow{Iterable,Collection}{X,Y} to Arrow{X,Y}).
+  protecting ARROW{Iterable,Collection}{X,Y} * (sort Arrow{Iterable,Collection}{X,Y} to Arrow{X,Y}).  
   op map : [Arrow{X,Y}] X$Coll -> [Y$Coll] .
 
-  var f : [Arrow{X,Y}] .
-  var e : X$Elt .
-  var l : X$Coll .
+  var f  : [Arrow{X,Y}] .
+  var l  : X$Coll .
+  var l' : [Y$Coll] .
+  
+  op $map : [Arrow{X,Y}] X$Coll [Y$Coll] -> [Y$Coll] .  --- tail recursive
 
-  eq map(f, X$nil)  = Y$nil .
-  eq map(f, l)  = map(f, remainder(l)) (f get(l))  .
+  eq map(f, l) = $map(f, l, Y$nil) .
+  eq $map(f, X$nil, l') = l' .
+  eq $map(f, l, l') = $map(f, remainder(l), l' (f get(l))) . --- we could stop as soon as an ARR-ERR is produced
 
 endfm
 
---- these views allow us to straightforwardly define the MAP operation between COLLECTIONs 
-view IteColl from ITERABLE to COLLECTION is
-endv
 
-view IdeColl from COLLECTION to COLLECTION is
-endv
-
---- MAP between COLLECTIONs
+--- MAP between COLLECTIONs 
 
 fmod MAP-COLL{X :: COLLECTION, Y :: COLLECTION} is
   protecting MAP-ITE{IteColl, IdeColl}{X, Y} * (sort Arrow{IteColl,IdeColl}{X,Y} to Arrow{X,Y}) .
 endfm
 
+--- MAP within the same COLLECTION
+
 fmod MAP-SAME-COLL{X :: COLLECTION} is
   protecting MAP-COLL{X, X} .
 endfm
 
-view ListAsColl{X :: TRIV} from COLLECTION to LIST{X} is 
-  sort Coll to List{X} .
-  sort Elt to X$Elt .
-  op get to head .
-  op remainder to tail .
-endv
 
---- +SET includes get and remainder (note that the corresponding equations are the same as in the theory COLLECTION)
-
-fmod +SET{X :: TRIV} is 
- protecting SET{X} .
- var C : Set{X} .
- var E : X$Elt .
- op get : Set{X} -> [X$Elt] .
- op remainder : Set{X} -> Set{X} . 
- eq get((C, E)) = E .
- eq remainder((C, E)) = C .
- eq remainder(empty) = empty . 
-endfm
-
-view SetAsColl{X :: TRIV} from COLLECTION to +SET{X} is
-  sort Coll to Set{X} .
-  sort Elt to X$Elt .
-  op nil to empty .
-  op __ to _,_ .
-endv
-
-fmod NEW-EX1 is
-  protecting MAP-COLL{ListAsColl{Float}, SetAsColl{String}} * (sort Arrow{ListAsColl{Float}, SetAsColl{String}} to Arrow{Float, String}) .
-  protecting CONVERSION .
-  op toString  : Float -> Arrow{Float, String} .
-  var x : Float .
-  eq toString(x) = lambda x : string(x) .
-endfm
-
-red in NEW-EX1 : map(toString(x), (1.0 2.0 3.0 1.0 2.0 3.0)) .
-
-fmod NEW-EX2 is
-  protecting MAP-SAME-COLL{SetAsColl{String}} * (sort Arrow{SetAsColl{String}, SetAsColl{String}} to Arrow{String,String}) .
-  op  double  : String -> Arrow{String,String} .
-  var s : String .
-  eq double(s) = lambda s : s + upperCase(s) .
-  op tmpmap : Set{String} String -> Set{String} .
-  var ss : Set{String} .
-  eq tmpmap(ss, s) = map(double(s), ss) .   
-endfm
-
-red in NEW-EX2 : map(double(s), ("one", "two", "three", "one")) .
-
---- ALTERNATIVE ---
+--- ALTERNATIVE APPROACH ---
+--- the COLLECTION' theory doesn't satisfy ITERABLE
 --- duplicate MAP- in which both the source and the target are COLLECTIONs
---- the COLLECTION theory doesn't satisfy ITERABLE
 
-fth COLLECTION is
-  including BASESTRUCT . 
-  op __ : Coll Elt -> Coll [ctor] .
-  op __ : Coll Coll -> Coll [id: nil] . --- maybe redundant
-endfth
-
---- trivial view
-
-view COLLECTION from TRIV to COLLECTION is
-endv
-
-fmod MAP-COLL.V2{X :: COLLECTION, Y :: COLLECTION} is
-  protecting ARROW{COLLECTION,COLLECTION}{X,Y} * (sort Arrow{COLLECTION,COLLECTION}{X,Y} to Arrow{X,Y}).
+fmod MAP-COLL'{X :: COLLECTION', Y :: COLLECTION'} is
+  protecting ARROW{Collection',Collection'}{X,Y} * (sort Arrow{Collection',Collection'}{X,Y} to Arrow{X,Y}).
   op map : [Arrow{X,Y}] X$Coll -> [Y$Coll] .
 
-  var f : [Arrow{X,Y}] .
-  var e : X$Elt .
-  var l : X$Coll .
+  var f  : [Arrow{X,Y}] .
+  var e  : X$Elt .
+  var l  : X$Coll .
+  var l' : [Y$Coll] .
+  
+  op $map : [Arrow{X,Y}] X$Coll [Y$Coll] -> [Y$Coll] .  --- tail recursive
 
-  eq map(f, X$nil)  = Y$nil .
-  eq map(f, (l e))  = map(f, l) (f e)  .
+  eq map(f, l) = $map(f, l, Y$nil) .
+  eq $map(f, X$nil, l') = l' .
+  eq $map (f, (l e), l') = $map(f, l, l' (f e)) . --- may not always work !
 
 endfm
 
-fmod MAP-SAME-COLL.V2{X :: COLLECTION} is --- homogeneous map
-  protecting MAP-COLL.V2{X, X} .
+fmod MAP-SAME-COLL'{X :: COLLECTION'} is --- homogeneous map
+  protecting MAP-COLL'{X, X} .
 endfm
-
-fmod NEW-EX2 is
-  protecting MAP-COLL.V2{ListAsColl{Float}, ListAsColl{String}} * (sort Arrow{ListAsColl{Float}, ListAsColl{String}} to Arrow{Float,String}).
-  protecting CONVERSION .
-  op toString  : Float -> Arrow{Float,String} .
-  var x : Float .
-  eq toString(x) = lambda x : string(x) .
-endfm
-
-red in NEW-EX2 : map(toString(x), (1.0 2.0 3.0)) .
-
-fmod NEW-EX3 is
-  protecting MAP-SAME-COLL.V2{ListAsColl{String}} * (sort Arrow{ListAsColl{String}, ListAsColl{String}} to Arrow{String,String}).
-  op  double  : String -> Arrow{String,String} .
-  var s : String .
-  eq double(s) = lambda s : s + s .
-  op tmpmap : List{String} String -> List{String} .
-  var ls : List{String} .
-  eq tmpmap(ls, s) = map(double(s), ls) .   
-endfm
-
-red in NEW-EX3 : map(double(s), ("uno" "due" "tre")) .
-
-fmod NEW-EX4 is
-  protecting MAP-COLL.V2{ListAsColl{Float}, SetAsColl{String}} .
-  protecting CONVERSION .
-  op toString  : Float -> Arrow{ListAsColl{Float}, SetAsColl{String}} .
-  var x : Float .
-  eq toString(x) = lambda x : string(x) .
-endfm
-
-red in NEW-EX4 : map(toString(x), (1.0 2.0 3.0 1.0 2.0 3.0)) .
-

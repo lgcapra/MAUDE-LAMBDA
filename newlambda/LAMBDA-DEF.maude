@@ -1,4 +1,10 @@
---- base module to define lambda functions in Maude
+--- base modules to define lambda functions in Maude
+
+***
+*** ============================================================
+*** MODULE 1: SUBST
+*** performs a variable substitution in a lambda expression using the meta-level
+*** ============================================================
 
 fmod SUBST is
   protecting META-LEVEL .
@@ -49,16 +55,24 @@ endfm
 *** ============================================================
 
 fmod ARROW{X :: TRIV, Y :: TRIV} is
-  protecting SUBST .
+  protecting SUBST .  --- extending instead of protecting? because of the new value ARR-ERR
 
   sort Arrow{X,Y} .
 
   op lambda_:_ : X$Elt [Y$Elt] -> [Arrow{X,Y}] . --- the body of lambda can be a partial function
   op __ : [Arrow{X,Y}] X$Elt -> [Y$Elt] .
+  op ARR-ERR : -> [Y$Elt] . --- error term, when the lambda evaluation fails for any reasons
 
   vars x z : X$Elt .
   var y    : [Y$Elt] .
 
-  eq lambda x : y z = downTerm(subst(upTerm(x), upTerm(z), upTerm(y)), y) .
+  eq lambda x : y z = downTerm(subst(upTerm(x), upTerm(z), upTerm(y)), ARR-ERR) .
 
 endfm
+
+--- "trivial" parametrized view of ARROW
+
+view Arrow{X :: TRIV, Y :: TRIV} from TRIV to ARROW{X,Y} is
+  sort Elt to Arrow{X,Y} .
+endv
+

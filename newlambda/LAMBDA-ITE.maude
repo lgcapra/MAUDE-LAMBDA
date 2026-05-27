@@ -1,0 +1,150 @@
+--- interfaces and views used for higher-order operations
+--- module +SET equipped with get and remainder ops
+--- view to the module ELIST (embedded lists) 
+
+fth BASE-STRUCT is
+ sorts Elt Coll .
+ op nil : -> Coll [pconst] .
+endfth
+
+--- the ITERABLE th defines the most general constraint for a given data structure to the "source" of a map operation
+
+fth ITERABLE is 
+ including BASE-STRUCT . 
+ op get : Coll -> [Elt] . --- undefined on nil
+ op remainder : Coll -> Coll . --- the rest of the collection, excluding the "got" element
+ eq remainder(nil) = nil .  --- not used, just specifies a constraint
+endfth
+
+--- the COLLECTION th is more general than MONOID because it doesn't require associativity of '__' and any subsorting 
+
+fth COLLECTION is
+  including ITERABLE . 
+  op __ : Coll Elt -> Coll .
+  op __ : Coll Coll -> Coll [id: nil] . --- maybe redundant
+  var C : Coll .
+  var E : Elt .
+  eq get(C E) = E .
+  eq remainder(C E) = C .
+endfth
+
+--- "trivial" views of these theories
+
+view Collection from TRIV to COLLECTION is
+endv
+
+view Iterable from TRIV to ITERABLE is
+endv
+
+--- NOTE
+--- from a theoretical point of view, a COLLECTION is also ITERABLE, thus we could add 'get' and 'remainder' to COLLECTION
+--- these operations can automatically be derived from those of COLLECTION; see the corresponding equations in COLLECTION  
+--- using this appproach, we establish a natural view from ITERABLE to COLLECTION, so that we can define only one MAP- module
+--- whose 1st parameter (the map's source) is ITERABLE and whose 2nd parameter (the map's target) is COLLECTION; 
+--- although elegant, this has some drawbacks from a pratical perspective, e.g., in SET{X} we couldn't map 'get' and 'remainder'
+--- the solution we adopt is to define +SET{X}, which explicitly provides these operations
+
+
+--- these views allow the MAP operation between COLLECTIONs to be straightforwardly defined  
+
+view IteColl from ITERABLE to COLLECTION is
+endv
+
+--- identity
+
+view IdeColl from COLLECTION to COLLECTION is
+endv
+
+--- parametrized views of built-in collections
+
+view ListAsColl{X :: TRIV} from COLLECTION to LIST{X} is 
+  sort Coll to List{X} .
+  sort Elt to X$Elt .
+  op get to head .
+  op remainder to tail .
+endv
+
+--- +SET includes get and remainder (note that the corresponding equations are the same as in the theory COLLECTION)
+
+fmod +SET{X :: TRIV} is 
+ protecting SET{X} .
+ var C : Set{X} .
+ var E : X$Elt .
+ op get : Set{X} -> [X$Elt] .
+ op remainder : Set{X} -> Set{X} . 
+ eq get((C, E)) = E .
+ eq remainder((C, E)) = C .
+ eq remainder(empty) = empty . 
+endfm
+
+view SetAsColl{X :: TRIV} from COLLECTION to +SET{X} is
+  sort Coll to Set{X} .
+  sort Elt to X$Elt .
+  op nil to empty .
+  op __ to _,_ .
+endv
+
+
+in ../../rewpt/shared/ELIST
+
+--- NEW an embedded list is a list enclosed between square brackets (an element of Elist is not of sort Elist)
+--- on-the-fly view 
+
+view ElistAsColl{X :: TRIV} from COLLECTION to ELIST{X} is 
+  sort Coll to Elist{X} .
+  sort Elt to X$Elt .
+  var Y : Elt .
+  vars L L' : Coll .
+  op nil to term [ nil ] .
+  op (L Y) to term [ l(L), Y ] .
+  op (L L') to term [ l(L), l(L') ] .
+  op get(L) to term head(l(L)) .
+  op remainder(L) to term [ tail(l(L)) ] .
+  
+endv
+
+
+--- ALTERNATIVE DEF ---
+--- the COLLECTION' theory doesn't "satisfy" ITERABLE
+--- duplicated MAP- in which both the source and the target are COLLECTION'
+
+fth COLLECTION' is
+  including BASE-STRUCT . 
+  op __ : Coll Elt -> Coll  .
+  op __ : Coll Coll -> Coll [id: nil] . --- maybe redundant
+endfth
+
+
+--- trivial view
+
+view Collection' from TRIV to COLLECTION' is
+endv
+
+--- parametrized views of built-in collections
+
+view ListAsColl'{X :: TRIV} from COLLECTION' to LIST{X} is 
+  sort Coll to List{X} .
+  sort Elt to X$Elt .
+endv
+
+--- ve can use the original SET{X}
+
+view SetAsColl'{X :: TRIV} from COLLECTION' to SET{X} is
+  sort Coll to Set{X} .
+  sort Elt to X$Elt .
+  op nil to empty .
+  op __ to _,_ .
+endv
+
+--- NEW
+
+view ElistAsColl'{X :: TRIV} from COLLECTION' to ELIST{X} is 
+  sort Coll to Elist{X} .
+  sort Elt to X$Elt .
+  var Y : Elt .
+  vars L L' : Coll .
+  op nil to term [ nil ] .
+  op (L Y) to term [ l(L), Y ] .
+  op (L L') to term [ l(L), l(L') ] .
+  
+endv
