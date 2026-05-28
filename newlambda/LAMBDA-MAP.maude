@@ -58,9 +58,23 @@ fmod MAP-COLL'{X :: COLLECTION', Y :: COLLECTION'} is
 
   eq map(f, l) = $map(f, l, Y$nil) .
   eq $map(f, X$nil, l') = l' .
-  eq $map (f, (l e), l') = $map(f, l, l' (f e)) . --- may not always work ! 
+  eq $map (f, (l e), l') = $map(f, l, l' (f e)) . --- may not always work !! (if 'l e' is not a constructor; coherence is assumed) 
 endfm
 
 fmod MAP-SAME-COLL'{X :: COLLECTION'} is --- homogeneous map
   protecting MAP-COLL'{X, X} .
+endfm
+
+
+--- NEW ---
+--- based on the new definition of ITERABLE'
+
+fmod MAP-ITE'{X :: ITERABLE', Y :: COLLECTION'} is
+  protecting MAP-COLL'{CollToIte',IdeColl'}{X,Y} * (sort Arrow{CollToIte',IdeColl'}{X,Y} to Arrow{X,Y}).
+  op map : [Arrow{X,Y}] X$Iterable -> [Y$Coll] .
+
+  var f  : [Arrow{X,Y}] .
+  var l  : X$Iterable  .
+  eq map(f, l) = map(f, iterator(l)) .
+
 endfm

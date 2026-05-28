@@ -152,15 +152,30 @@ endfm
 
 red in NEW-EX5' : map(toString(x), [ 1.0, 2.0, 3.0, 1.0, 2.0, 3.0 ]) .
 
+
+--- the following functions
+
 fmod NEW-EX5'' is
-  protecting MAP-ITE{ElistAsIte{Float}, SetAsColl{String}} * (sort Arrow{ElistAsIte{Float}, SetAsColl{String}} to Arrow{Float,String}) .
+  protecting MAP-ITE{ElistAsIterable{Float}, SetAsColl{String}} * (sort Arrow{ElistAsIterable{Float}, SetAsColl{String}} to Arrow{Float,String}) .
   protecting CONVERSION .
   op toString  : Float -> Arrow{Float, String} .
   var x : Float .
   eq toString(x) = lambda x : string(x) .
 endfm
 
+--- based on the new definition of ITERABLE'
+
 red in NEW-EX5'' : map(toString(x), [ 1.0, 2.0, 3.0, 1.0, 2.0, 3.0 ]) .
+
+fmod NEW-EX5''' is
+  protecting MAP-ITE'{ElistAsIterable'{Float}, SetAsColl'{String}} * (sort Arrow{ElistAsIterable'{Float}, SetAsColl'{String}} to Arrow{Float,String}) .
+  protecting CONVERSION .
+  op toString  : Float -> Arrow{Float, String} .
+  var x : Float .
+  eq toString(x) = lambda x : string(x) .
+endfm
+
+red in NEW-EX5''' : map(toString(x), [ 1.0, 2.0, 3.0, 1.0, 2.0, 3.0 ]) .
 
 --- example of non-trivial lambda substitution 
 

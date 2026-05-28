@@ -113,14 +113,35 @@ endv
 
 fth COLLECTION' is
   including BASE-STRUCT . 
-  op __ : Coll Elt -> Coll  .
-  op __ : Coll Coll -> Coll [id: nil] . --- maybe redundant
+  op __ : Coll Elt -> Coll [ctor] .
+  op __ : Coll Coll -> Coll [ctor id: nil] . --- maybe redundant
 endfth
 
+--- NEW the following th matches all data structures that can be seen as COLLECTION's
+--- AS-COLLECTION could be an alternative name (maybe better)
 
---- trivial view
+fth ITERABLE' is
+  including COLLECTION' .
+  sort Iterable . 
+  op iterator : Iterable -> Coll .
+endfth
+
+--- trivial views
 
 view Collection' from TRIV to COLLECTION' is
+endv
+
+view Iterable' from TRIV to ITERABLE' is
+endv 
+
+--- COLLECTION' seen as ITERABLE'  
+
+view CollToIte' from  COLLECTION' to ITERABLE' is
+endv
+
+--- identity view
+
+view IdeColl' from COLLECTION' to COLLECTION' is
 endv
 
 --- parametrized views of built-in collections
@@ -152,11 +173,22 @@ view ElistAsColl'{X :: TRIV} from COLLECTION' to ELIST{X} is
   
 endv
 
-view ElistAsIte{X :: TRIV} from ITERABLE to ELIST{X} is 
+view ElistAsIterable{X :: TRIV} from ITERABLE to ELIST{X} is 
   sort Coll to Elist{X} .
   sort Elt to X$Elt .
   var L  : Coll .
   op nil to term [ nil ] .
   op get(L) to term head(l(L)) .
   op remainder(L) to term [ tail(l(L)) ] .
+endv
+
+
+--- based on ITERABLE': the iterator associated with a ELIST is the enclosed LIST
+
+view ElistAsIterable'{X :: TRIV} from ITERABLE' to ELIST{X} is 
+  sort Coll to List{X} .
+  sort Elt to X$Elt .
+  sort Iterable to Elist{X} .
+  op __ to _,_ .  *** necessary because __ is renamed to _,_ in ELIST
+  op iterator to l .
 endv
