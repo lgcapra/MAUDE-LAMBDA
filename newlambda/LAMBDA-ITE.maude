@@ -108,7 +108,7 @@ endv
 --- the COLLECTION' theory doesn't "satisfy" ITERABLE
 --- duplicated MAP- in which both the source and the target are COLLECTION'
 --- NOTE: 
---- COLLECTION' can be used as source of a map operation only if __ is a constructor !!
+--- COLLECTION' can be used as a source of a map operation only if __ is a constructor !!
 --- See the counter-example with ELIST 
 
 fth COLLECTION' is
@@ -160,7 +160,7 @@ view SetAsColl'{X :: TRIV} from COLLECTION' to SET{X} is
   op __ to _,_ .
 endv
 
---- NEW
+--- NEW: ElistAsColl' shouldn't be used as a source of a map operation (only as a target)
 
 view ElistAsColl'{X :: TRIV} from COLLECTION' to ELIST{X} is 
   sort Coll to Elist{X} .

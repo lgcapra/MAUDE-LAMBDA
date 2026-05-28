@@ -177,6 +177,19 @@ endfm
 
 red in NEW-EX5''' : map(toString(x), [ 1.0, 2.0, 3.0, 1.0, 2.0, 3.0 ]) .
 
+
+--- map an ELIST into another
+
+fmod NEW-EX6' is
+  protecting MAP-ITE'{ElistAsIterable'{Float}, ElistAsColl'{String}} * (sort Arrow{ElistAsIterable'{Float}, ElistAsColl'{String}} to Arrow{Float,String}) .
+  protecting CONVERSION .
+  op toString  : Float -> Arrow{Float, String} .
+  var x : Float .
+  eq toString(x) = lambda x : string(x) .
+endfm
+
+red in NEW-EX6' : map(toString(x), [ 1.0, 2.0, 3.0, 1.0, 2.0, 3.0 ]) .
+
 --- example of non-trivial lambda substitution 
 
 --- reduce in NEW-EX3 : subst('X:String, upTerm(Y:String + "b"), upTerm(lambda Y:String : X:String + Y:String + "a")) .
