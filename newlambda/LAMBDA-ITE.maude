@@ -30,6 +30,9 @@ endfth
 
 --- "trivial" views of these theories
 
+view Triv from TRIV to TRIV is
+endv
+
 view Collection from TRIV to COLLECTION is
 endv
 

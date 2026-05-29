@@ -76,3 +76,35 @@ view Arrow{X :: TRIV, Y :: TRIV} from TRIV to ARROW{X,Y} is
   sort Elt to Arrow{X,Y} .
 endv
 
+
+***
+*** ============================================================
+*** MODULE 3: BINFUN
+*** binary lambda  blambda x, y : body  applied as  apply2(f, vx, vy)
+*** f : (X$Elt, Y$Elt) -> Y$Elt   (fold step: elt -> acc -> acc)
+*** ============================================================
+
+fmod BINFUN{X :: TRIV, Y :: TRIV} is
+  protecting SUBST .
+
+  sort BinFun{X,Y} .
+
+  op blambda_,_:_ : X$Elt Y$Elt [Y$Elt] -> [BinFun{X,Y}] .
+  op apply2 : [BinFun{X,Y}] X$Elt Y$Elt -> [Y$Elt] .
+  op BINFUN-ERR : -> [Y$Elt] .
+
+  vars x vx : X$Elt .
+  vars y vy : Y$Elt .
+  var  body : [Y$Elt] .
+
+  eq apply2(blambda x, y : body, vx, vy) =
+    downTerm(subst(upTerm(y), upTerm(vy),
+             subst(upTerm(x), upTerm(vx), upTerm(body))), BINFUN-ERR) .
+
+endfm
+
+--- "trivial" parametrized view of BINFUN
+
+view BinFun{X :: TRIV, Y :: TRIV} from TRIV to BINFUN{X,Y} is
+  sort Elt to BinFun{X,Y} .
+endv
