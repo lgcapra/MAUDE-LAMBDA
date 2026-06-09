@@ -1,0 +1,17 @@
+*** embedded list (builds on built-in LIST) --- avoids preregularity issue, e.g., between terms like: 1 . 1 and 1 . 1 2
+fmod ELIST{X :: TRIV} is
+ protecting LIST{X} * (op __  to _`,_ ) .
+ sorts NeElist{X} Elist{X} .
+ subsort NeElist{X} < Elist{X} .
+ *** wrap
+ op [_] : List{X} -> Elist{X} [ctor] .
+ op [_] : NeList{X} -> NeElist{X} [ctor] .
+ op l : Elist{X} -> List{X} .
+ eq l([L:List{X}]) =  L:List{X} .
+endfm
+
+*** parameterized trivial view to E-LIST{X}
+view Elist{X :: TRIV} from TRIV to ELIST{X} is 
+ sort Elt to Elist{X} . 
+endv
+

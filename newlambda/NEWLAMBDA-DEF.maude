@@ -57,16 +57,17 @@ endfm
 fmod ARROW{X :: TRIV, Y :: TRIV} is
   protecting SUBST .  --- extending instead of protecting? because of the new value ARR-ERR
 
-  sort Arrow{X,Y} .
-
-  op lambda_:_ : X$Elt [Y$Elt] -> [Arrow{X,Y}] . --- the body of lambda can be a partial function
-  op __ : [Arrow{X,Y}] X$Elt -> [Y$Elt] .
+  sorts Arrow{X,Y} Expr{X,Y} .
+  subsort Arrow{X,Y} < Expr{X,Y} . *** new
+  subsort Y$Elt < Expr{X,Y} .
+  op lambda_:_ : X$Elt [Y$Elt] -> Arrow{X,Y} . --- the body of lambda can be a partial function
+  op _(_) : Arrow{X,Y} X$Elt -> [Y$Elt] .
   op ARR-ERR : -> [Y$Elt] . --- error term, when the lambda evaluation fails for any reasons
 
   vars x z : X$Elt .
   var y    : [Y$Elt] .
 
-  eq lambda x : y z = downTerm(subst(upTerm(x), upTerm(z), upTerm(y)), ARR-ERR) .
+  eq (lambda x : y)  (z)  = downTerm(subst(upTerm(x), upTerm(z), upTerm(y)), ARR-ERR) .
 
 endfm
 
@@ -108,3 +109,14 @@ endfm
 view BinFun{X :: TRIV, Y :: TRIV} from TRIV to BINFUN{X,Y} is
   sort Elt to BinFun{X,Y} .
 endv
+
+
+fmod BINFUN2{X :: TRIV, Y :: TRIV} is
+  protecting ARROW{X, Y} .
+  protecting ARROW{Y, Y} * (op ARR-ERR to ARR-ERR1) .
+endfm
+
+fmod FUN-NAT-STRING is
+  protecting BINFUN2{Nat, String} .
+  protecting CONVERSION .
+endfm
