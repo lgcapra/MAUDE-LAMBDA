@@ -1,0 +1,22 @@
+
+***
+*** ============================================================
+*** MODULE 1: BINFUN2
+*** ============================================================
+
+in LAMBDA-DEF
+
+fmod BINFUN2{X :: TRIV, Y :: TRIV} is
+  protecting ARROW{X, Y} .
+  protecting ARROW{Y, Y} .
+  sort  Expr{Y} .
+  subsort Y$Elt Arrow{X,Y} Arrow{Y,Y} < Expr{Y} . *** new
+endfm
+
+fmod FUN-NAT-STRING is
+  protecting BINFUN2{Nat, String} .
+  protecting CONVERSION .
+endfm
+
+red (lambda x:Nat : lambda y:String : string(x:Nat, 16) + y:String) 16 .
+red (lambda x:Nat : lambda y:String : string(x:Nat, 16) + y:String) 16 "a" .
