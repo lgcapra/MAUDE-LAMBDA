@@ -129,3 +129,16 @@ endfm
 
 red in FOLD-EX5 : fold(add(n, acc), 0, (1, 2, 3, 4, 5)) .
 --- expected: 15 (order may vary since Set is unordered)
+
+fmod FOLD-EX6 is
+  protecting FOLD-COLL{SetAsColl{String}, Nat} *
+    (sort BinFun{SetAsColl{String},Nat} to BinFun{String, Nat}) .
+  var s : String .
+  var acc : Nat .
+  
+  op add : String Nat -> BinFun{String, Nat} .
+  eq add(s, acc) = lambda s : lambda acc : length(s) + acc .
+endfm
+
+red in FOLD-EX6 : fold(add(s, acc), 0, ("a", "aa", "aaa", "aaaa", "aaaaa")) .
+--- expected: 15
