@@ -88,7 +88,7 @@ view SetAsColl{X :: TRIV} from COLLECTION to +SET{X} is
 endv
 
 
-in ../../rewpt/shared/ELIST
+in ELIST
 
 --- NEW an embedded list is a list enclosed between square brackets (an element of Elist is not of sort Elist)
 --- on-the-fly view 

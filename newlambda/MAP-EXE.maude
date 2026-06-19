@@ -5,7 +5,6 @@ in LAMBDA-MAP
 
 fmod EX-CURRIED is
   protecting ARROW{Nat, Arrow{Nat,Nat}} .
-  protecting ARROW{Nat, Nat} .
   vars n m : Nat .
 
   op curryAdd : Nat Nat -> Arrow{Nat, Arrow{Nat,Nat}} .
@@ -16,7 +15,6 @@ red (curryAdd(n, m) 3) 4 .
 
 fmod EX-CURRIED2 is
   protecting ARROW{Nat, Arrow{Nat,Float}} .
-  protecting ARROW{Nat, Float} .
   protecting CONVERSION .
   vars n m : Nat .
 
@@ -28,8 +26,6 @@ red (curryDiv(n, m) 7) 2 .
 
 fmod EX-CURRIED3 is
   protecting ARROW{Nat, Arrow{Nat, Arrow{Nat,Nat}}} .
-  protecting ARROW{Nat, Arrow{Nat,Nat}} .
-  protecting ARROW{Nat, Nat} .
   vars n m k : Nat .
 
   op curryAdd3 : Nat Nat Nat -> Arrow{Nat, Arrow{Nat, Arrow{Nat,Nat}}} .

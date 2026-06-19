@@ -1,0 +1,131 @@
+in BINFUN
+in LAMBDA-ITE
+
+--- causes a crash (due to the use of theory-views and multi-level binding in ARROW" : see email from Steven)
+--- fmod BFUN-ITE{X :: ITERABLE, Y :: TRIV} is
+---  protecting BINFUN{Iterable, TRIV}{X, Y} .
+--- ... 
+--- endfm
+
+--- pattern suggested by Steven (instead of theory-view Iterable)
+fmod DUMMY-ITE{X :: ITERABLE} is
+endfm
+
+view Iterable{X :: ITERABLE} from TRIV to DUMMY-ITE{X} is
+  sort Elt to X$Elt .
+endv
+
+--- this version functions!
+fmod BFUN-ITE{X :: ITERABLE, Y :: TRIV} is
+  protecting BINFUN{Iterable{X}, Y} * (sort BinFun{Iterable{X},Y} to BinFun{X,Y}).
+endfm
+
+fmod FOLD-ITE{X :: ITERABLE, Y :: TRIV} is
+  protecting BFUN-ITE{X, Y} .
+
+  op fold : BinFun{X,Y} Y$Elt X$Coll -> [Y$Elt] .
+
+  var f   : BinFun{X,Y} .
+  var acc : Y$Elt .
+  var l   : X$Coll .
+
+  eq fold(f, acc, X$nil) = acc .
+  eq fold(f, acc, l)     = fold(f, f get(l) acc, remainder(l)) .
+endfm
+
+--- causes a crash (same reason as above)
+--- fmod FOLD-COLL{X :: COLLECTION, Y :: TRIV} is
+---   protecting FOLD-ITE{IteColl, TRIV}{X, Y} * (sort Arrow{IteColl,TRIV}{X,Y} to Arrow{X,Y},
+---     sort BinFun{IteColl,TRIV}{X,Y} to BinFun{X,Y},
+---     sort Arrow{TRIV,TRIV}{Y,Y} to  Arrow{Y,Y}, sort Fun{TRIV}{Y} to Fun{Y}) .
+---  endfm
+
+--- we use the same pattern  NOT to use the theory-view IteColl
+fmod DUMMY-COLL{X :: COLLECTION} is
+endfm
+
+view Collection{X :: COLLECTION} from ITERABLE to DUMMY-COLL{X} is
+  sort Elt to X$Elt .
+  sort Coll to X$Coll .
+  op nil to X$nil .
+endv
+
+fmod FOLD-COLL{X :: COLLECTION, Y :: TRIV} is
+  protecting FOLD-ITE{Collection{X}, Y} * (sort BinFun{Collection{X},Y} to BinFun{X,Y}).
+endfm
+
+--- ---------------------------------------------------------------
+--- EX1: sum a list of Nats  (foldl (+) 0 [1,2,3,4,5] = 15)
+--- ---------------------------------------------------------------
+
+fmod FOLD-EX1 is
+  protecting FOLD-COLL{SetAsColl{Float}, Float} * (sort BinFun{SetAsColl{Float},Float} to BinFun{Float,Float},
+                                                   sort Arrow{SetAsColl{Float},Float} to Arrow{Float,Float}) .
+  vars n acc : Float .
+  op add : Float Float -> BinFun{Float,Float} .
+  eq add(n, acc) = lambda n : lambda acc : n + acc .
+endfm
+
+red in FOLD-EX1 : fold(add(n, acc), 0.0, (1.0, 2.0, 3.0, 4.0, 5.0)) .
+--- expected: 15
+
+--- ---------------------------------------------------------------
+--- EX2: product of a list of Nats  (foldl (*) 1 [1..5] = 120)
+--- ---------------------------------------------------------------
+
+fmod FOLD-EX2 is
+  protecting FOLD-COLL{ListAsColl{Float}, Float} * 
+      (sort BinFun{ListAsColl{Float},Float} to BinFun{Float,Float}) .
+  vars n acc : Float .
+  op times : Float Float -> BinFun{Float,Float} .
+  eq times(n, acc) = lambda n : lambda acc : n * acc .
+endfm
+
+red in FOLD-EX2 : fold(times(n, acc), 1.0, (1.0 2.0 3.0 4.0 5.0)) .
+--- expected: 120
+
+--- ---------------------------------------------------------------
+--- EX3: string concatenation  (foldl (++) "" ["uno","due","tre"])
+--- ---------------------------------------------------------------
+
+fmod FOLD-EX3 is
+  protecting FOLD-COLL{ListAsColl{String}, String} *
+    (sort BinFun{ListAsColl{String},String} to BinFun{String,String}) .
+  vars s acc : String .
+  op concat : String String -> BinFun{String,String} .
+  eq concat(s, acc) = lambda s : lambda acc : acc + s .
+endfm
+
+red in FOLD-EX3 : fold(concat(s, acc), "", ("uno" "due" "tre")) .
+--- expected: "unoduetre"
+
+--- ---------------------------------------------------------------
+--- EX4: max of a list of Nats  (foldl max 0 [3,1,4,1,5,9,2,6] = 9)
+--- ---------------------------------------------------------------
+
+fmod FOLD-EX4 is
+  protecting FOLD-COLL{ListAsColl{Float}, Float} *
+    (sort BinFun{ListAsColl{Float},Float} to BinFun{Float,Float}) .
+  vars n acc : Float .
+  op mymax : Float Float -> BinFun{Float,Float} .
+  eq mymax(n, acc) = lambda n : lambda acc : if n > acc then n else acc fi .
+endfm
+
+red in FOLD-EX4 : fold(mymax(n, acc), 0.0, (3.0 1.0 4.0 1.0 5.0 9.0 2.0 6.0)) .
+--- expected: 9
+
+--- ---------------------------------------------------------------
+--- EX5: homogeneous fold (FOLD-SAME-COLL)
+---       sum over Set{Nat}  (elements are Nat, accumulator is Nat)
+--- ---------------------------------------------------------------
+
+fmod FOLD-EX5 is
+  protecting FOLD-COLL{SetAsColl{Nat}, Nat} *
+    (sort BinFun{SetAsColl{Nat},Nat} to BinFun{Nat}) .
+  vars n acc : Nat .
+  op add : Nat Nat -> BinFun{Nat} .
+  eq add(n, acc) = lambda n : lambda acc : n + acc .
+endfm
+
+red in FOLD-EX5 : fold(add(n, acc), 0, (1, 2, 3, 4, 5)) .
+--- expected: 15 (order may vary since Set is unordered)
