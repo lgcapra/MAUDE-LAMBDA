@@ -1,21 +1,21 @@
-in newlambda/LAMBDA-ITE
+in newlambda/COLLECTIONS
 
 fth CollToColl is 
- inc COLLECTION'  .
- inc COLLECTION' * (sort Elt to Elt', sort Coll to Coll', op nil to nil') .
+ inc COLLECTION  .
+ inc COLLECTION * (sort Elt to Elt', sort Coll to Coll', op nil to nil') .
  op f : Elt -> Elt' . *** mapping operator
 endfth
 
 *** map operation between ITERABLE and COLLECTION
-fth IteToColl is 
- inc ITERABLE'  .
- inc COLLECTION' * (sort Elt to Elt', sort Coll to Coll', op nil to nil') .
+fth AsCollToColl is 
+ inc AS-COLLECTION  .
+ inc COLLECTION * (sort Elt to Elt', sort Coll to Coll', op nil to nil') .
  op f : Elt -> Elt' . *** mapping operator
 endfth
 
 
 *** the parametrized functional module ITE-MAP defines the map operation between ITERABLE and COLLECTION
-fmod ITE-MAP{X :: IteToColl} is
+fmod ITE-MAP{X :: AsCollToColl} is
   op map : X$Iterable -> X$Coll' .
   op $map : X$Coll X$Coll' -> X$Coll' .
   var C : X$Coll . 
@@ -29,7 +29,7 @@ fmod ITE-MAP{X :: IteToColl} is
 endfm
 
 *** 1st example: a list of nat and the successor op
-view NatList from IteToColl to NAT-LIST is
+view NatList from AsCollToColl to NAT-LIST is
   sort Elt to Nat .
   sort Elt' to Nat .
   sort Coll to NatList .
@@ -53,7 +53,7 @@ fmod STRLIST-NATSET is
   pr SET{Nat} .
 endfm
 
-view StrListToNatSet from IteToColl to STRLIST-NATSET is
+view StrListToNatSet from AsCollToColl to STRLIST-NATSET is
    sort Elt   to String .
    sort Elt'  to Nat .
    sort Coll  to List{String} .
@@ -75,3 +75,42 @@ red map("1" "2" "3" "4" "0" "9" "8" "10" "100" nil  "1" "2" "3" "4" "0" "9" "8" 
         "1" "2" "3" "4" "0" "9" "8" "10" "100" nil  "1" "2" "3" "4" "0" "9" "8" "10" "100" nil
         "1" "2" "3" "4" "0" "9" "8" "10" "100" nil  "1" "2" "3" "4" "0" "9" "8" "10" "100" nil
         "1" "2" "3" "4" "0" "9" "8" "10" "100" nil  "1" "2" "3" "4" "0" "9" "8" "10" "100" nil) .
+
+--- alternative definition
+
+fmod MAP-ASCOLL{X :: AS-COLLECTION, Y :: COLLECTION} is 
+  op f : X$Elt -> [Y$Elt] . --- map function (possibly partial, abstract) ---
+  op map : X$Iterable -> [Y$Coll] .
+  var l   : X$Iterable  .
+  var l'  : Y$Coll .
+  var l'' : X$Coll .
+  var e : X$Elt . 
+ 
+  eq map(l) = $map(iterator(l), Y$nil) .
+  op $map : X$Coll Y$Coll -> [Y$Coll] . 
+  eq $map(X$nil, l') = l' .
+  eq $map ((l'' e), l') = $map(l'', (Y$nil f(e)) l') . --- retains the order, if any
+endfm
+
+fmod MAP-COLL{X :: COLLECTION, Y :: COLLECTION} is
+  protecting MAP-ASCOLL{COLLECTION, IdeColl}{X, Y}  .
+endfm
+
+--- same example as in newlambda/MAP-EXE
+fmod EX2 is
+  protecting MAP-COLL{ListColl{Float}, ListColl{String}} . *** cambiare PR
+  protecting CONVERSION .
+  var x : Float .
+  eq f(x) = string(x) .
+endfm
+
+red in EX2 : map(1.0 2.0 3.0 1.0 2.0 3.0) .
+
+fmod EX2' is
+  protecting MAP-COLL{ListColl{Float}, ListColl{String}} . *** cambiare PR
+  protecting CONVERSION .
+  var x : Float .
+  eq f(x) = string(ceiling(x)) .
+endfm
+
+red in EX2' : map(1.1 2.0 3.0 1.0 2.1 3.0) .
