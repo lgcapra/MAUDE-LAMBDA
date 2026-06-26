@@ -1,0 +1,36 @@
+in LAMBDA-DEF
+
+--- examples of curried functions (should be moved?)
+
+fmod EX-CURRIED is
+  protecting ARROW{Nat, Arrow{Nat,Nat}} .
+  vars n m : Nat .
+
+  op curryAdd : Nat Nat -> Arrow{Nat, Arrow{Nat,Nat}} .
+  eq curryAdd(n, m) = lambda n : lambda m : n + m .
+endfm
+
+red (curryAdd(n, m) 3) 4 .
+
+fmod EX-CURRIED2 is
+  protecting ARROW{Nat, Arrow{Nat,Float}} .
+  protecting CONVERSION .
+  vars n m : Nat .
+
+  op curryDiv : Nat Nat -> Arrow{Nat, Arrow{Nat,Float}} .
+  eq curryDiv(n, m) = lambda n : lambda m : float(n) / float(m) .
+endfm
+
+red (curryDiv(n, m) 7) 2 .
+
+fmod EX-CURRIED3 is
+  protecting ARROW{Nat, Arrow{Nat, Arrow{Nat,Nat}}} .
+  vars n m k : Nat .
+
+  op curryAdd3 : Nat Nat Nat -> Arrow{Nat, Arrow{Nat, Arrow{Nat,Nat}}} .
+  eq curryAdd3(n, m, k) = lambda n : lambda m : lambda k : n + m + k .
+endfm
+
+red ((curryAdd3(n, m, k) 1) 2) 3 .
+
+

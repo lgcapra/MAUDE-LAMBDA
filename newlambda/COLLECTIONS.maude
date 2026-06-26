@@ -1,0 +1,114 @@
+--- interfaces and views used for representing collections in higher-order operations
+
+fth BASE-STRUCT is
+ sorts Elt Coll .
+ op nil : -> Coll [pconst] .
+endfth
+
+--- the ITERABLE th defines the most general constraint for a given data structure to the "source" of a map operation
+
+fth ITERABLE is 
+ including BASE-STRUCT . 
+ op get : Coll -> [Elt] . --- undefined on nil
+ op remainder : Coll -> Coll . --- the rest of the collection, excluding the "got" element
+ eq remainder(nil) = nil .  --- not used, just specifies a constraint
+endfth
+
+--- the COLLECTION th is more general than MONOID because it doesn't require associativity of '__' and any subsorting 
+ fth COLLECTION is
+  including BASE-STRUCT . 
+  op __ : Coll Elt -> Coll .  --- add an element to the collection
+  op __ : Coll Coll -> Coll [id: nil] . --- bulk add
+ endfth
+
+
+--- "trivial" theory-views
+
+view Collection from TRIV to COLLECTION is
+endv
+
+view Iterable from TRIV to ITERABLE is
+endv
+
+--- NOTE
+--- from a theoretical point of view, a COLLECTION is also ITERABLE, but it is preferrable to keep
+--- these two theories clearly separated, although this leads to define two similar MAP- modules
+--- whose 1st parameter (the map's source) is either ITERABLE or COLLECTION and whose 2nd parameter (target) is COLLECTION; 
+--- see also the description in LAMBDA-MAP
+---
+--- COLLECTION can be used as a source of a map operation only if __ is a constructor
+--- See the counter-example with ELIST 
+
+--- identity theory-view
+
+view IdeColl from COLLECTION to COLLECTION is
+endv
+
+--- parametrized views of built-in collections
+
+view ListColl{X :: TRIV} from COLLECTION to LIST{X} is 
+  sort Coll to List{X} .
+  sort Elt to X$Elt .
+endv
+
+
+view SetColl{X :: TRIV} from COLLECTION to SET{X} is
+  sort Coll to Set{X} .
+  sort Elt to X$Elt .
+  op nil to empty .
+  op __ to _,_ .
+endv
+
+in ../ELIST
+
+--- NEW an embedded list is a list enclosed between square brackets (an element of Elist is not of sort Elist)
+--- on-the-fly view 
+
+--- should not be used as source of a MAP operation
+view ElistColl{X :: TRIV} from COLLECTION to ELIST{X} is 
+  sort Coll to Elist{X} .
+  sort Elt to X$Elt .
+  var Y : Elt .
+  vars L L' : Coll .
+  op nil to term [ nil ] .
+  op (L Y) to term [ l(L), Y ] .
+  op (L L') to term [ l(L), l(L') ] .
+endv
+
+view ElistIte{X :: TRIV} from ITERABLE to ELIST{X} is 
+  sort Coll to Elist{X} .
+  sort Elt to X$Elt .
+  var L  : Coll .
+  op nil to term [ nil ] .
+  op get(L) to term head(l(L)) .
+  op remainder(L) to term [ tail(l(L)) ] .
+endv
+
+--- Alternative definition
+--- the theory AS-COLLECTION matches all data structures that can be seen as COLLECTIONs
+
+fth AS-COLLECTION is
+  including COLLECTION .
+  sort Iterable . 
+  op iterator : Iterable -> Coll .
+endfth
+
+--- trivial theory-view
+view AsCollection from TRIV to AS-COLLECTION is
+endv 
+
+--- theory-view to COLLECTION
+view COLLECTION from  AS-COLLECTION to COLLECTION is
+  sort Iterable to Coll .
+  op iterator(C:Iterable) to term C:Coll .
+endv
+
+--- based on AS-COLLECTION: the iterator associated with a ELIST is the enclosed LIST
+
+view ElistAsColl{X :: TRIV} from AS-COLLECTION to ELIST{X} is 
+  sort Coll to List{X} .
+  sort Elt to X$Elt .
+  sort Iterable to Elist{X} .
+  op __ to _,_ .  *** necessary because __ is renamed to _,_ in ELIST
+  op iterator to l .
+endv

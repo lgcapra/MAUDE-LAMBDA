@@ -41,11 +41,11 @@ view NatList from MOP to NAT-LIST is
   op op to s_ .
 endv
 
-***  try reducing
-***  Maude> red map(1 2 3 4 0 9 nil) .
 fmod NAT-LIST-MAP is
   pr LAMBDA-MAP{NatList} .
 endfm
+
+red map(1 2 3 4 0 9 nil) .
 
 *** 2nd example: a list of strings coverted into a list of nat using length
 *** we need to define a module including both kinds of lists
@@ -62,8 +62,8 @@ view StrNatList from MOP to STRING-NAT-LIST is
   op op to length .
 endv
 
-***  try reducing
-***  Maude> red map("1" "2" "3" "4" "0" "9" "8" "10" "100" nil) .
 fmod STR-NAT-LIST-MAP is
   pr LAMBDA-MAP{StrNatList} .
 endfm
+
+red map("1" "2" "3" "4" "0" "9" "8" "10" "100" nil) .

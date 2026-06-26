@@ -1,37 +1,44 @@
---- definition of higher-order map based on LAMBDA-DEF
+--- definition of higher-order map based on LAMBDA-DEF and COLLECTIONS
 in LAMBDA-DEF
-in LAMBDA-ITE
+in COLLECTIONS
 
+--- 1st alternative based on ITERABLE and COLLECTION
 --- NOTE
---- from a theoretical point of view, a COLLECTION is also ITERABLE, thus we could add 'get' and 'remainder' to COLLECTION
---- these operations can automatically be derived from those of COLLECTION; see the corresponding equations in COLLECTION  
---- using this appproach, we establish a natural view from ITERABLE to COLLECTION, so that we can define only one MAP- module
---- whose 1st parameter (the map's source) is ITERABLE and whose 2nd parameter (the map's target) is COLLECTION; 
---- although elegant, this has some drawbacks from a pratical perspective, e.g., in SET{X} we couldn't map 'get' and 'remainder'
---- the solution we adopt is to define +SET{X}, which explicitly provides these operations
+--- using this appproach, we cannot establish a direct view from ITERABLE to COLLECTION, therefore, we need to duplicate
+--- the MAP- module whose 1st parameter (the map's source) can be ITERABLE or COLLECTION and whose 2nd parameter 
+--- the map's target is COLLECTION; 
+--- despite this, there is some advantage from a pratical perspective, e.g., we can map structures like SET{X} or BAG{X}  
 
 
 fmod MAP-ITE{X :: ITERABLE, Y :: COLLECTION} is
   protecting ARROW{Iterable,Collection}{X,Y} * (sort Arrow{Iterable,Collection}{X,Y} to Arrow{X,Y}).  
-  op map : [Arrow{X,Y}] X$Coll -> [Y$Coll] .
+  op map : Arrow{X,Y} X$Coll -> [Y$Coll] .
 
-  var f  : [Arrow{X,Y}] .
-  var l  : X$Coll .
-  var l' : [Y$Coll] .
+  var f  : Arrow{X,Y} .
+  var l  : X$Coll . *** Iterable (should be renamed)
+  var l' : Y$Coll .
   
-  op $map : [Arrow{X,Y}] X$Coll [Y$Coll] -> [Y$Coll] .  --- tail recursive
-
   eq map(f, l) = $map(f, l, Y$nil) .
+  op $map : Arrow{X,Y} X$Coll Y$Coll -> [Y$Coll] . 
   eq $map(f, X$nil, l') = l' .
-  eq $map(f, l, l') = $map(f, remainder(l), l' (f get(l))) . --- we could stop as soon as an ARR-ERR is produced
-
+  eq $map(f, l, l') = $map(f, remainder(l), (Y$nil f get(l)) l') . --- retains the order, if any
 endfm
 
 
 --- MAP between COLLECTIONs 
-
 fmod MAP-COLL{X :: COLLECTION, Y :: COLLECTION} is
-  protecting MAP-ITE{IteColl, IdeColl}{X, Y} * (sort Arrow{IteColl,IdeColl}{X,Y} to Arrow{X,Y}) .
+  protecting ARROW{Collection,Collection}{X,Y} * (sort Arrow{Collection,Collection}{X,Y} to Arrow{X,Y}).  
+  op map : Arrow{X,Y} X$Coll -> [Y$Coll] .
+
+  var f  : Arrow{X,Y} .
+  var l  : X$Coll .
+  var l' : Y$Coll .
+  var e  : X$Elt .
+  
+  eq map(f, l) = $map(f, l, Y$nil) .
+  op $map : Arrow{X,Y} X$Coll Y$Coll -> [Y$Coll] . 
+  eq $map(f, X$nil, l') = l' .
+  eq $map(f, l e, l') = $map(f, l, (Y$nil f e) l' ) . --- retains the order, if any
 endfm
 
 --- MAP within the same COLLECTION
@@ -41,40 +48,29 @@ fmod MAP-SAME-COLL{X :: COLLECTION} is
 endfm
 
 
---- ALTERNATIVE APPROACH ---
---- the COLLECTION' theory doesn't satisfy ITERABLE
---- duplicate MAP- in which both the source and the target are COLLECTIONs
+--- 2nd alternative based on AS-COLLECTION and COLLECTION
+--- MAP-COLL' (map between COLLECTION) can be redefined in terms of MAP-ASCOLL
 
-fmod MAP-COLL'{X :: COLLECTION', Y :: COLLECTION'} is
-  protecting ARROW{Collection',Collection'}{X,Y} * (sort Arrow{Collection',Collection'}{X,Y} to Arrow{X,Y}).
-  op map : [Arrow{X,Y}] X$Coll -> [Y$Coll] .
-
-  var f  : [Arrow{X,Y}] .
-  var e  : X$Elt .
-  vars l l'' : X$Coll .
-  var l' : [Y$Coll] .
+fmod MAP-ASCOLL{X :: AS-COLLECTION, Y :: COLLECTION} is
+  protecting ARROW{AsCollection,Collection}{X,Y} * (sort Arrow{AsCollection,Collection}{X,Y} to Arrow{X,Y}).
   
-  op $map : [Arrow{X,Y}] X$Coll [Y$Coll] -> [Y$Coll] .  --- tail recursive
-
-  eq map(f, l) = $map(f, l, Y$nil) .
+  op map : Arrow{X,Y} X$Iterable -> [Y$Coll] .
+  var f   : Arrow{X,Y} .
+  var l   : X$Iterable  .
+  var l'  : Y$Coll .
+  var l'' : X$Coll .
+  var e : X$Elt . 
+  eq map(f, l) = $map(f, iterator(l), Y$nil) .
+  op $map : Arrow{X,Y} X$Coll Y$Coll -> [Y$Coll] .  
   eq $map(f, X$nil, l') = l' .
-  eq $map (f, (l e), l') = $map(f, l, l' (f e)) . --- may not always work !! (if 'l e' is not a constructor; coherence is assumed) 
+  eq $map (f, (l'' e), l') = $map(f, l'', (Y$nil f e) l') . --- retains the order, if any
 endfm
 
-fmod MAP-SAME-COLL'{X :: COLLECTION'} is --- homogeneous map
+--- definition of MAP- between COLLECTION based on MAP-ASCOLL (redundant, but necessary if we used only MAP-ASCOLL)
+fmod MAP-COLL'{X :: COLLECTION, Y :: COLLECTION} is
+  protecting MAP-ASCOLL{COLLECTION, IdeColl}{X, Y} * (sort Arrow{COLLECTION, IdeColl}{X,Y} to Arrow{X,Y}) .
+endfm
+
+fmod MAP-SAME-COLL'{X :: COLLECTION} is
   protecting MAP-COLL'{X, X} .
-endfm
-
-
---- NEW ---
---- based on the new definition of ITERABLE'
-
-fmod MAP-ITE'{X :: ITERABLE', Y :: COLLECTION'} is
-  protecting MAP-COLL'{CollToIte',IdeColl'}{X,Y} * (sort Arrow{CollToIte',IdeColl'}{X,Y} to Arrow{X,Y}).
-  op map : [Arrow{X,Y}] X$Iterable -> [Y$Coll] .
-
-  var f  : [Arrow{X,Y}] .
-  var l  : X$Iterable  .
-  eq map(f, l) = map(f, iterator(l)) .
-
 endfm

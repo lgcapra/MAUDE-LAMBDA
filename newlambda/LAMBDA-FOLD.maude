@@ -1,82 +1,94 @@
---- definition of higher-order fold (foldl) based on LAMBDA-DEF
---- the fold step is a binary lambda:  blambda elt, acc : body
---- type: FoldFun{X,Y} = BinFun{Iterable,Triv}{X,Y}
----
---- NOTE: why curried ARROW cannot be used
---- All attempts to express Arrow{acc, Arrow{elt,acc}} as a parametric type failed:
----
----   ARROW{Iterable, Y}{X,Y}               ← mixes theory-view (Iterable) and parameter (Y)
----   ARROW{Triv, InnerStep}{Y,X,Y}         ← InnerStep has 2 free params, each V consumes only 1
----   ARROW{Triv, InnerStep{X,Y}}{Y}        ← "nonfinal instantiation uses both theory-view and parameter"
----
---- Maude's constraint: no view expression (at any nesting level) can mix
---- named theory-views with module parameters. BINFUN{Iterable,Triv}{X,Y}
---- avoids this by having two separate 1-param theory-views, exactly as
---- ARROW{Iterable,Collection}{X,Y} does in MAP-ITE.
-in LAMBDA-DEF
-in LAMBDA-ITE
+in BINFUN
+in COLLECTIONS
 
-view InnerStep{X :: ITERABLE, Y :: TRIV} from TRIV to ARROW{Iterable, Triv}{X, Y} is
-  sort Elt to Arrow{Iterable,Triv}{X,Y} .
+--- causes a crash (due to the use of theory-views and multi-level binding in ARROW" : see email from Steven)
+--- fmod BFUN-ITE{X :: ITERABLE, Y :: TRIV} is
+---  protecting BINFUN{Iterable, TRIV}{X, Y} .
+--- ... 
+--- endfm
+
+--- pattern suggested by Steven (instead of theory-view Iterable)
+fmod DUMMY-ITE{X :: ITERABLE} is
+endfm
+
+view Iterable{X :: ITERABLE} from TRIV to DUMMY-ITE{X} is
+  sort Elt to X$Elt .
 endv
 
-view InnerStep'{X :: COLLECTION', Y :: TRIV} from TRIV to ARROW{Collection', Triv}{X, Y} is
-  sort Elt to Arrow{Collection',Triv}{X,Y} .
-endv
 
 fmod FOLD-ITE{X :: ITERABLE, Y :: TRIV} is
-  protecting BINFUN{Iterable, Triv}{X, Y} *
-    (sort BinFun{Iterable,Triv}{X,Y} to FoldFun{X,Y}) .
+  protecting BINFUN{Iterable{X}, Y} * (sort BinFun{Iterable{X},Y} to BinFun{X,Y}) . --- functions!!
+  op fold : BinFun{X,Y} Y$Elt X$Coll -> [Y$Elt] .
 
-  op fold : [FoldFun{X,Y}] Y$Elt X$Coll -> [Y$Elt] .
-
-  var f   : [FoldFun{X,Y}] .
+  var f   : BinFun{X,Y} .
   var acc : Y$Elt .
   var l   : X$Coll .
 
   eq fold(f, acc, X$nil) = acc .
-  eq fold(f, acc, l)     = fold(f, apply2(f, get(l), acc), remainder(l)) .
+  eq fold(f, acc, l)     = fold(f, f get(l) acc, remainder(l)) .
 endfm
+
+--- causes a crash (same reason as above)
+--- fmod FOLD-COLL{X :: COLLECTION, Y :: TRIV} is
+---   protecting FOLD-ITE{IteColl, TRIV}{X, Y} * (sort Arrow{IteColl,TRIV}{X,Y} to Arrow{X,Y},
+---     sort BinFun{IteColl,TRIV}{X,Y} to BinFun{X,Y},
+---     sort Arrow{TRIV,TRIV}{Y,Y} to  Arrow{Y,Y}, sort Fun{TRIV}{Y} to Fun{Y}) .
+---  endfm
+
+--- we use the same pattern (not to use the theory-view IteColl)
+fmod DUMMY-COLL{X :: COLLECTION} is
+endfm
+
+view Collection{X :: COLLECTION} from TRIV to DUMMY-COLL{X} is
+  sort Elt to X$Elt .
+endv
 
 fmod FOLD-COLL{X :: COLLECTION, Y :: TRIV} is
-  protecting FOLD-ITE{IteColl, Triv}{X, Y} *
-    (sort FoldFun{IteColl,Triv}{X,Y} to FoldFun{X,Y}) .
-endfm
+  protecting BINFUN{Collection{X}, Y} * (sort BinFun{Collection{X},Y} to BinFun{X,Y}).
+   op fold : BinFun{X,Y} Y$Elt X$Coll -> [Y$Elt] .
 
-fmod FOLD-SAME-COLL{X :: COLLECTION} is
-  protecting FOLD-COLL{IdeColl, Collection}{X, X} *
-    (sort FoldFun{IdeColl,Collection}{X,X} to FoldFun{X}) .
-endfm
-
-fmod FOLD-COLL'{X :: COLLECTION', Y :: TRIV} is
-  protecting BINFUN{Collection', Triv}{X, Y} *
-    (sort BinFun{Collection',Triv}{X,Y} to FoldFun{X,Y}) .
-
-  op fold : [FoldFun{X,Y}] Y$Elt X$Coll -> [Y$Elt] .
-
-  var f   : [FoldFun{X,Y}] .
+  var f   : BinFun{X,Y} .
   var acc : Y$Elt .
-  var e   : X$Elt .
   var l   : X$Coll .
+  var e   : X$Elt .
 
   eq fold(f, acc, X$nil) = acc .
-  eq fold(f, acc, (l e)) = fold(f, apply2(f, e, acc), l) .  --- constructor decomp (coherence assumed)
+  eq fold(f, acc, l e)   = fold(f, f e acc, l) .
 endfm
 
-fmod FOLD-SAME-COLL'{X :: COLLECTION'} is
-  protecting FOLD-COLL'{IdeColl', Collection'}{X, X} *
-    (sort FoldFun{IdeColl',Collection'}{X,X} to FoldFun{X}) .
+
+--- ALTERNATIVE APPROACH (using AS-COLLECTION) ---
+
+fmod DUMMY-ASCOLL{X :: AS-COLLECTION} is
 endfm
 
-fmod FOLD-ITE'{X :: ITERABLE', Y :: TRIV} is
-  protecting FOLD-COLL'{CollToIte', Triv}{X, Y} *
-    (sort FoldFun{CollToIte',Triv}{X,Y} to FoldFun{X,Y}) .
+view AsColl{X :: AS-COLLECTION} from TRIV to DUMMY-ASCOLL{X} is
+  sort Elt to X$Elt . 
+endv
 
-  op fold : [FoldFun{X,Y}] Y$Elt X$Iterable -> [Y$Elt] .
+fmod FOLD-ASCOLL{X :: AS-COLLECTION, Y :: TRIV} is
+   protecting BINFUN{AsColl{X}, Y} * (sort BinFun{AsColl{X}, Y} to BinFun{X,Y}) .
+   op fold : BinFun{X,Y} Y$Elt X$Iterable -> [Y$Elt] .
+   var f   : BinFun{X,Y} .
+   var acc : Y$Elt .
+   var l   : X$Iterable  .
+   var l'  : X$Coll .
+   var e   : X$Elt .
+   eq fold(f, acc, l) = $fold(f, acc, iterator(l)) .
+   op $fold : BinFun{X,Y} Y$Elt X$Coll -> [Y$Elt] .
+   eq $fold(f, acc, X$nil) = acc .
+   eq $fold(f, acc, l' e)  = $fold(f, f e acc, l') .
+endfm
 
-  var f   : [FoldFun{X,Y}] .
-  var acc : Y$Elt .
-  var l   : X$Iterable .
+view ASCOLL{X :: COLLECTION} from AS-COLLECTION to DUMMY-COLL{X} is
+  sort Elt to X$Elt . 
+  sort Coll to X$Coll . 
+  sort Iterable to X$Coll .
+  op nil to X$nil .
+  op iterator(C:Iterable) to term C:X$Coll .
+endv
 
-  eq fold(f, acc, l) = fold(f, acc, iterator(l)) .
+--- this version is defined starting from FOLD-ASCOLL
+fmod FOLD-COLL'{X :: COLLECTION, Y :: TRIV} is
+   protecting FOLD-ASCOLL{ASCOLL{X}, Y} * (sort BinFun{ASCOLL{X},Y} to BinFun{X,Y}) .
 endfm

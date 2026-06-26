@@ -1,22 +1,18 @@
---- examples of higher-order fold using binary lambda (blambda)
 in LAMBDA-FOLD
-
---- fold step syntax:  blambda elt, acc : body
---- application:       apply2(f, elt, acc)
 
 --- ---------------------------------------------------------------
 --- EX1: sum a list of Nats  (foldl (+) 0 [1,2,3,4,5] = 15)
 --- ---------------------------------------------------------------
 
 fmod FOLD-EX1 is
-  protecting FOLD-COLL{ListAsColl{Float}, Float} *
-    (sort FoldFun{ListAsColl{Float},Float} to FoldFun{Float,Float}) .
+  protecting FOLD-COLL{SetColl{Float}, Float} * (sort BinFun{SetColl{Float},Float} to BinFun{Float,Float},
+                                                   sort Arrow{SetColl{Float},Float} to Arrow{Float,Float}) .
   vars n acc : Float .
-  op add : Float Float -> FoldFun{Float,Float} .
-  eq add(n, acc) = blambda n, acc : n + acc .
+  op add : Float Float -> BinFun{Float,Float} .
+  eq add(n, acc) = lambda n : lambda acc : n + acc .
 endfm
 
-red in FOLD-EX1 : fold(add(n, acc), 0.0, (1.0 2.0 3.0 4.0 5.0)) .
+red in FOLD-EX1 : fold(add(n, acc), 0.0, (1.0, 2.0, 3.0, 4.0, 5.0)) .
 --- expected: 15
 
 --- ---------------------------------------------------------------
@@ -24,11 +20,11 @@ red in FOLD-EX1 : fold(add(n, acc), 0.0, (1.0 2.0 3.0 4.0 5.0)) .
 --- ---------------------------------------------------------------
 
 fmod FOLD-EX2 is
-  protecting FOLD-COLL{ListAsColl{Float}, Float} *
-    (sort FoldFun{ListAsColl{Float},Float} to FoldFun{Float,Float}) .
+  protecting FOLD-COLL{ListColl{Float}, Float} * 
+      (sort BinFun{ListColl{Float},Float} to BinFun{Float,Float}) .
   vars n acc : Float .
-  op times : Float Float -> FoldFun{Float,Float} .
-  eq times(n, acc) = blambda n, acc : n * acc .
+  op times : Float Float -> BinFun{Float,Float} .
+  eq times(n, acc) = lambda n : lambda acc : n * acc .
 endfm
 
 red in FOLD-EX2 : fold(times(n, acc), 1.0, (1.0 2.0 3.0 4.0 5.0)) .
@@ -39,11 +35,11 @@ red in FOLD-EX2 : fold(times(n, acc), 1.0, (1.0 2.0 3.0 4.0 5.0)) .
 --- ---------------------------------------------------------------
 
 fmod FOLD-EX3 is
-  protecting FOLD-COLL{ListAsColl{String}, String} *
-    (sort FoldFun{ListAsColl{String},String} to FoldFun{String,String}) .
+  protecting FOLD-COLL{ListColl{String}, String} *
+    (sort BinFun{ListColl{String},String} to BinFun{String,String}) .
   vars s acc : String .
-  op concat : String String -> FoldFun{String,String} .
-  eq concat(s, acc) = blambda s, acc : acc + s .
+  op concat : String String -> BinFun{String,String} .
+  eq concat(s, acc) = lambda s : lambda acc : acc + s .
 endfm
 
 red in FOLD-EX3 : fold(concat(s, acc), "", ("uno" "due" "tre")) .
@@ -54,14 +50,14 @@ red in FOLD-EX3 : fold(concat(s, acc), "", ("uno" "due" "tre")) .
 --- ---------------------------------------------------------------
 
 fmod FOLD-EX4 is
-  protecting FOLD-COLL{ListAsColl{Float}, Float} *
-    (sort FoldFun{ListAsColl{Float},Float} to FoldFun{Float,Float}) .
+  protecting FOLD-ASCOLL{ElistAsColl{Float}, Float} *
+    (sort BinFun{ElistAsColl{Float},Float} to BinFun{Float,Float}) .
   vars n acc : Float .
-  op mymax : Float Float -> FoldFun{Float,Float} .
-  eq mymax(n, acc) = blambda n, acc : if n > acc then n else acc fi .
+  op mymax : Float Float -> BinFun{Float,Float} .
+  eq mymax(n, acc) = lambda n : lambda acc : if n > acc then n else acc fi .
 endfm
 
-red in FOLD-EX4 : fold(mymax(n, acc), 0.0, (3.0 1.0 4.0 1.0 5.0 9.0 2.0 6.0)) .
+red in FOLD-EX4 : fold(mymax(n, acc), 0.0, [3.0, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0, 6.0]) .
 --- expected: 9
 
 --- ---------------------------------------------------------------
@@ -70,45 +66,25 @@ red in FOLD-EX4 : fold(mymax(n, acc), 0.0, (3.0 1.0 4.0 1.0 5.0 9.0 2.0 6.0)) .
 --- ---------------------------------------------------------------
 
 fmod FOLD-EX5 is
-  protecting FOLD-SAME-COLL{SetAsColl{Nat}} *
-    (sort FoldFun{SetAsColl{Nat}} to FoldFun{Nat}) .
+  protecting FOLD-COLL'{SetColl{Nat}, Nat} *
+    (sort BinFun{SetColl{Nat},Nat} to BinFun{Nat}) .
   vars n acc : Nat .
-  op add : Nat Nat -> FoldFun{Nat} .
-  eq add(n, acc) = blambda n, acc : n + acc .
+  op add : Nat Nat -> BinFun{Nat} .
+  eq add(n, acc) = lambda n : lambda acc : n + acc .
 endfm
 
 red in FOLD-EX5 : fold(add(n, acc), 0, (1, 2, 3, 4, 5)) .
 --- expected: 15 (order may vary since Set is unordered)
 
-
---- alternative approach (COLLECTION')
-
---- ---------------------------------------------------------------
---- EX1': sum a list of Nats using FOLD-COLL'
---- ---------------------------------------------------------------
-
-fmod FOLD-EX1' is
-  protecting FOLD-COLL'{ListAsColl'{Float}, Float} *
-    (sort FoldFun{ListAsColl'{Float},Float} to FoldFun{Float,Float}) .
-  vars n acc : Float .
-  op add : Float Float -> FoldFun{Float,Float} .
-  eq add(n, acc) = blambda n, acc : n + acc .
+fmod FOLD-EX6 is
+  protecting FOLD-COLL'{SetColl{String}, Nat} *
+    (sort BinFun{SetColl{String},Nat} to BinFun{String, Nat}) .
+  var s : String .
+  var acc : Nat .
+  
+  op add : String Nat -> BinFun{String, Nat} .
+  eq add(s, acc) = lambda s : lambda acc : length(s) + acc .
 endfm
 
-red in FOLD-EX1' : fold(add(n, acc), 0.0, (1.0 2.0 3.0 4.0 5.0)) .
+red in FOLD-EX6 : fold(add(s, acc), 0, ("a", "aa", "aaa", "aaaa", "aaaaa")) .
 --- expected: 15
-
---- ---------------------------------------------------------------
---- EX2': product using FOLD-SAME-COLL'  (homogeneous over List{Nat})
---- ---------------------------------------------------------------
-
-fmod FOLD-EX2' is
-  protecting FOLD-SAME-COLL'{ListAsColl'{Float}} *
-    (sort FoldFun{ListAsColl'{Float}} to FoldFun{Float}) .
-  vars n acc : Float .
-  op times : Float Float -> FoldFun{Float} .
-  eq times(n, acc) = blambda n, acc : n * acc .
-endfm
-
-red in FOLD-EX2' : fold(times(n, acc), 1.0, (1.0 2.0 3.0 4.0 5.0)) .
---- expected: 120
