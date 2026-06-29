@@ -1,6 +1,6 @@
 --- definition of higher-order map based on LAMBDA-DEF and COLLECTIONS
 in LAMBDA-DEF
-in COLLECTIONS
+in ../COLLECTIONS
 
 --- 1st alternative based on ITERABLE and COLLECTION
 --- NOTE

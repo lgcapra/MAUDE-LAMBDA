@@ -1,5 +1,5 @@
 in BINFUN
-in COLLECTIONS
+in ../COLLECTIONS
 
 --- causes a crash (due to the use of theory-views and multi-level binding in ARROW" : see email from Steven)
 --- fmod BFUN-ITE{X :: ITERABLE, Y :: TRIV} is

@@ -59,7 +59,7 @@ view SetColl{X :: TRIV} from COLLECTION to SET{X} is
   op __ to _,_ .
 endv
 
-in ../ELIST
+in ELIST
 
 --- NEW an embedded list is a list enclosed between square brackets (an element of Elist is not of sort Elist)
 --- on-the-fly view 
@@ -71,8 +71,8 @@ view ElistColl{X :: TRIV} from COLLECTION to ELIST{X} is
   var Y : Elt .
   vars L L' : Coll .
   op nil to term [ nil ] .
-  op (L Y) to term [ l(L), Y ] .
-  op (L L') to term [ l(L), l(L') ] .
+  op (L Y) to term [ list(L) Y ] .
+  op (L L') to term [ list(L) list(L') ] .
 endv
 
 view ElistIte{X :: TRIV} from ITERABLE to ELIST{X} is 
@@ -80,8 +80,8 @@ view ElistIte{X :: TRIV} from ITERABLE to ELIST{X} is
   sort Elt to X$Elt .
   var L  : Coll .
   op nil to term [ nil ] .
-  op get(L) to term head(l(L)) .
-  op remainder(L) to term [ tail(l(L)) ] .
+  op get(L) to term head(list(L)) .
+  op remainder(L) to term [ tail(list(L)) ] .
 endv
 
 --- Alternative definition
@@ -109,6 +109,6 @@ view ElistAsColl{X :: TRIV} from AS-COLLECTION to ELIST{X} is
   sort Coll to List{X} .
   sort Elt to X$Elt .
   sort Iterable to Elist{X} .
-  op __ to _,_ .  *** necessary because __ is renamed to _,_ in ELIST
-  op iterator to l .
+  --- op __ to _,_ .  *** necessary because __ is renamed to _,_ in ELIST
+  op iterator to list .
 endv

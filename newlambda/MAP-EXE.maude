@@ -48,7 +48,7 @@ fmod EX5 is
   eq toString(x) = lambda x : string(x) .
 endfm
 
-red in EX5 : map(toString(x), [ 1.0, 2.0, 3.0, 1.0, 2.0, 3.0 ]) .
+red in EX5 : map(toString(x), [ 1.0 2.0 3.0 1.0 2.0 3.0 ]) .
 
 
 --- alternative approach
@@ -105,7 +105,7 @@ fmod COUNTEREX5' is
   eq toString(x) = lambda x : string(x) .
 endfm
 
-red in COUNTEREX5' : map(toString(x), [ 1.0, 2.0, 3.0, 1.0, 2.0, 3.0 ]) .
+red in COUNTEREX5' : map(toString(x), [ 1.0 2.0 3.0 1.0 2.0 3.0 ]) .
 
 
 --- the following functions
@@ -118,7 +118,7 @@ fmod EX5' is
   eq toString(x) = lambda x : string(x) .
 endfm
 
-red in EX5' : map(toString(x), [ 1.0, 2.0, 3.0, 1.0, 2.0, 3.0 ]) .
+red in EX5' : map(toString(x), [ 1.0 2.0 3.0 1.0 2.0 3.0 ]) .
 
 
 --- map an ELIST into another
@@ -131,21 +131,23 @@ fmod EX6' is
   eq toString(x) = lambda x : string(x) .
 endfm
 
-red in EX6' : map(toString(x), [ 1.0, 2.0, 3.0, 1.0, 2.0, 3.0 ]) .
+red in EX6' : map(toString(x), [ 1.0 2.0 3.0 1.0 2.0 3.0 ]) .
 
 fmod EX7' is
   protecting MAP-COLL'{ListColl{String}, SetColl{Nat}} * (sort Arrow{ListColl{String}, SetColl{Nat}} to Arrow{String, Nat}) .
-  protecting CONVERSION .
-  op toNat  : String -> Arrow{String, Nat} .
+  op toLen  : String -> Arrow{String, Nat} .
   var x : String .
-  eq toNat(x) = lambda x : length(x) .
+  eq toLen(x) = lambda x : length(x) .
 endfm
 
-red in EX7' : map(toNat(x), "1" "2" "3" "4" "0" "9" "8" "10" "100" nil  "1" "2" "3" "4" "0" "9" "8" "10" "100" nil
+red in EX7' : map(toLen(x), "1" "2" "3" "4" "0" "9" "8" "10" "100" nil  "1" "2" "3" "4" "0" "9" "8" "10" "100" nil
         "1" "2" "3" "4" "0" "9" "8" "10" "100" nil  "1" "2" "3" "4" "0" "9" "8" "10" "100" nil
         "1" "2" "3" "4" "0" "9" "8" "10" "100" nil  "1" "2" "3" "4" "0" "9" "8" "10" "100" nil
         "1" "2" "3" "4" "0" "9" "8" "10" "100" nil  "1" "2" "3" "4" "0" "9" "8" "10" "100" nil
         "1" "2" "3" "4" "0" "9" "8" "10" "100" nil  "1" "2" "3" "4" "0" "9" "8" "10" "100" nil) .
+
+red in EX7' : map(toLen(x), "cat" "dog" "Tiger" "Shark" "Snake" "leopard" "lion") .
+red in EX7' : map(lambda x:Char : ascii(x:Char),  "a" "d" "T" "S") .
 
 
 --- example of non-trivial lambda substitution 

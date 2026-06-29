@@ -55,21 +55,19 @@ endfm
 *** ============================================================
 
 fmod ARROW{X :: TRIV, Y :: TRIV} is
-  protecting SUBST .  --- extending instead of protecting? because of the new value ARR-ERR
+  extending SUBST .  --- extending because of the new value ARR-ERR
 
   sort Arrow{X,Y} .
 
-  --- op lambda_:_ : X$Elt [Y$Elt] -> [Arrow{X,Y}] . --- the body of lambda can be a partial function
-  --- op __ : [Arrow{X,Y}] X$Elt -> [Y$Elt] .
-  op lambda_:_ : X$Elt [Y$Elt] -> Arrow{X,Y} . --- the body of lambda can be a partial function
+  op lambda_:_ : X$Elt [Y$Elt] -> [Arrow{X,Y}] . --- the body of lambda can be a partial function
   op __ : Arrow{X,Y} X$Elt -> [Y$Elt] .
   op ARR-ERR{X,Y} : -> [Y$Elt] [ pconst ]. --- error term, when the lambda evaluation fails for any reasons
 
   vars x z : X$Elt .
   var y    : [Y$Elt] .
 
+  cmb lambda x : y : Arrow{X,Y} if upTerm(x) :: Variable . --- characterizes lambda expressions
   eq lambda x : y z = downTerm(subst(upTerm(x), upTerm(z), upTerm(y)), ARR-ERR{X,Y}) .
-
 endfm
 
 --- "trivial" parametrized view of ARROW
@@ -78,35 +76,49 @@ view Arrow{X :: TRIV, Y :: TRIV} from TRIV to ARROW{X,Y} is
   sort Elt to Arrow{X,Y} .
 endv
 
+***
+*** ============================================================
+*** MODULE 3: 2ARROW
+*** ============================================================
+
+--- NOTE the two-level binding of parameters may rise an issue if theory-views are then used to further instantiate the module
+fmod 2ARROW{X :: TRIV, Y :: TRIV, Z :: TRIV} is
+  pr ARROW{X, Arrow{Y,Z}} * (sort Arrow{X, Arrow{Y,Z}} to 2Arrow{X, Y, Z}) .
+endfm
 
 ***
 *** ============================================================
-*** MODULE 3: BINFUN
-*** binary lambda  blambda x, y : body  applied as  apply2(f, vx, vy)
-*** f : (X$Elt, Y$Elt) -> Y$Elt   (fold step: elt -> acc -> acc)
+*** MODULE 4: BINFUN
 *** ============================================================
 
-*** fmod BINFUN{X :: TRIV, Y :: TRIV} is
-***  protecting SUBST .
+fmod BINFUN{X :: TRIV, Y :: TRIV} is
+  pr 2ARROW{X, Y, Y} * (sort 2Arrow{X, Y, Y} to BinFun{X, Y}) .
+endfm
 
-***  sort BinFun{X,Y} .
+--- EXAMPLE
 
-***  op blambda_,_:_ : X$Elt Y$Elt [Y$Elt] -> [BinFun{X,Y}] .
-***  op apply2 : [BinFun{X,Y}] X$Elt Y$Elt -> [Y$Elt] .
-***  op BINFUN-ERR : -> [Y$Elt] .
+fmod BFUN-NAT-STR is 
+ pr CONVERSION . 
+ pr BINFUN{Nat, String} .
+endfm
 
-***  vars x vx : X$Elt .
-***  vars y vy : Y$Elt .
-***  var  body : [Y$Elt] .
+red (lambda x:Nat : lambda y:String : string(x:Nat, 16) + y:String) 17 .
+red (lambda x:Nat : lambda y:String : string(x:Nat, 16) + y:String) 17 "a" .
 
-***  eq apply2(blambda x, y : body, vx, vy) =
-***    downTerm(subst(upTerm(y), upTerm(vy),
-***             subst(upTerm(x), upTerm(vx), upTerm(body))), BINFUN-ERR) .
+***
+*** ============================================================
+*** MODULE 5: BINFUN-H
+*** homogeneous bin function (helpful?)
+*** ============================================================
 
-*** endfm
+fmod BINFUN-H{X :: TRIV} is 
+  pr BINFUN{X, X} * (sort BinFun{X, X} to BinFun{X}, sort Arrow{X, X} to Arrow{X}) .
+endfm
 
---- "trivial" parametrized view of BINFUN
+--- EXAMPLE
 
-*** view BinFun{X :: TRIV, Y :: TRIV} from TRIV to BINFUN{X,Y} is
-***  sort Elt to BinFun{X,Y} .
-*** endv
+fmod BFUN-STR is 
+ pr BINFUN-H{String} .
+endfm
+
+red (lambda x:String : lambda y:String : x:String + y:String) "b" "a" .

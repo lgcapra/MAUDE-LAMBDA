@@ -1,4 +1,4 @@
-in newlambda/COLLECTIONS
+in COLLECTIONS
 
 fth CollToColl is 
  inc COLLECTION  .
@@ -79,7 +79,7 @@ red map("1" "2" "3" "4" "0" "9" "8" "10" "100" nil  "1" "2" "3" "4" "0" "9" "8" 
 --- alternative definition
 
 fmod MAP-ASCOLL{X :: AS-COLLECTION, Y :: COLLECTION} is 
-  op f : X$Elt -> [Y$Elt] . --- map function (possibly partial, abstract) ---
+  op f : [X$Elt] -> [Y$Elt] . --- map function; abstract, possibly partial ---
   op map : X$Iterable -> [Y$Coll] .
   var l   : X$Iterable  .
   var l'  : Y$Coll .
@@ -96,6 +96,10 @@ fmod MAP-COLL{X :: COLLECTION, Y :: COLLECTION} is
   protecting MAP-ASCOLL{COLLECTION, IdeColl}{X, Y}  .
 endfm
 
+fmod MAP-SAME-COLL{X :: COLLECTION} is
+  protecting MAP-COLL{X, X}  .
+endfm
+
 --- same example as in newlambda/MAP-EXE
 fmod EX1 is
   generated-by MAP-ASCOLL{ElistAsColl{Float}, ListColl{String}} . 
@@ -104,7 +108,7 @@ fmod EX1 is
   eq f(x) = string(ceiling(x)) .
 endfm
 
-red in EX1 : map([1.0, 2.5, 3.0, 1.0, 2.0, 3.5]) .
+red in EX1 : map([1.0 2.5 3.0 1.0 2.0 3.5]) .
 
 fmod EX2 is
   protecting MAP-COLL{ListColl{Float}, ListColl{String}} . *** cambiare PR
