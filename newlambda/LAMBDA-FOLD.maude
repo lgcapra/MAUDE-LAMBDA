@@ -1,4 +1,4 @@
-in BINFUN
+in LAMBDA-DEF
 in ../COLLECTIONS
 
 --- causes a crash (due to the use of theory-views and multi-level binding in ARROW" : see email from Steven)
@@ -92,3 +92,13 @@ endv
 fmod FOLD-COLL'{X :: COLLECTION, Y :: TRIV} is
    protecting FOLD-ASCOLL{ASCOLL{X}, Y} * (sort BinFun{ASCOLL{X},Y} to BinFun{X,Y}) .
 endfm
+
+--- to implement map as a particular case of fold, we need a view that maps the sort Elt of TRIV to the sort Coll of COLLECTION (to be used as the accumulator of fold)
+view Collection'{X :: COLLECTION} from TRIV to DUMMY-COLL{X} is
+  sort Elt to X$Coll .
+endv
+
+fmod FOLD-AS-MAP {X :: AS-COLLECTION, Y :: COLLECTION} is
+  pr FOLD-ASCOLL{X, Collection'{Y}} * (sort Arrow{Collection'{Y},Collection'{Y}} to Arrow{Collection{Y}},
+                                      sort BinFun{X,Collection'{Y}} to BinFun{X, Collection{Y}}).
+endfm  

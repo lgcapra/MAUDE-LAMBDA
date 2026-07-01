@@ -88,3 +88,27 @@ endfm
 
 red in FOLD-EX6 : fold(add(s, acc), 0, ("a", "aa", "aaa", "aaaa", "aaaaa")) .
 --- expected: 15
+
+--- in the examples below, the fold is used to implement a map operation (the accumulator is a collection as well) 
+
+fmod FOLD-EX7 is
+  protecting FOLD-AS-MAP{ElistAsColl{String}, ListColl{String}} * (sort Arrow{Collection{ListColl{String}}} to Arrow{List{String}},
+       sort  BinFun{ElistAsColl{String},Collection{ListColl{String}}} to  BinFun{String,List{String}}) . 
+       var s : String . var acc : List{String} .  
+       op bf : String List{String} -> BinFun{String, List{String}} .
+       eq bf(s, acc) = lambda s : lambda acc : (upperCase(s)  acc) .
+endfm
+
+red in FOLD-EX7 : fold(bf(s, acc), nil, ["a" "aa" "aaa" "aaaa" "aaaaa"]) .
+
+
+fmod EX8 is
+  protecting FOLD-AS-MAP{ElistAsColl{Float}, ListColl{String}} * (sort Arrow{Collection{ListColl{String}}} to Arrow{List{String}},
+             sort  BinFun{ElistAsColl{Float},Collection{ListColl{String}}} to  BinFun{Float,List{String}}) .
+  protecting CONVERSION .
+  var x : Float . var acc : List{String} .
+  op bf : Float List{String} -> BinFun{Float, List{String}} .
+  eq bf(x, acc) = lambda x : lambda acc : (string(x) acc) . 
+endfm
+
+red in EX8 : fold(bf(x, acc), nil, [ 1.0 2.0 3.0 1.0 2.0 3.0 ]) .

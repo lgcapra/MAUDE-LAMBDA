@@ -60,6 +60,7 @@ fmod ARROW{X :: TRIV, Y :: TRIV} is
   sort Arrow{X,Y} .
 
   op lambda_:_ : X$Elt [Y$Elt] -> [Arrow{X,Y}] . --- the body of lambda can be a partial function
+  --- op lambda_:_ : X$Elt [Y$Elt] ->  Arrow{X,Y} . --- alternative definition (in that case, comment the memebership equation below)
   op __ : Arrow{X,Y} X$Elt -> [Y$Elt] .
   op ARR-ERR{X,Y} : -> [Y$Elt] [ pconst ]. --- error term, when the lambda evaluation fails for any reasons
 
