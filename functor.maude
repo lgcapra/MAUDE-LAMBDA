@@ -1,0 +1,49 @@
+fth BOX is
+ including TRIV .
+ sort Box .
+ op fmap : Box -> Box .
+endfth  
+
+
+fmod FUNCTOR{X :: BOX} is
+    op map : X$Box -> X$Box .
+    var T : X$Box .
+    eq map(T) = fmap(T) .
+endfm
+
+fmod TREE{X :: TRIV} is
+    sort Tree{X$Elt} .
+    op mt : -> Tree{X$Elt} [ctor] .
+    op t : Tree{X$Elt} X$Elt Tree{X$Elt} -> Tree{X$Elt} [ctor] .
+
+endfm 
+
+
+fmod TREE-FUNC{X :: TRIV} is
+ pr TREE{X} .
+ --- pr FUNCTOR{Tree{X}} .
+ vars L R : Tree{X$Elt} .
+ var V : X$Elt . 
+ op fmap : Tree{X$Elt} -> Tree{X$Elt} .
+ op f : X$Elt -> X$Elt .
+ eq fmap(mt) = mt .
+ eq fmap(t(L, V, R)) = t(fmap(L), f(V), fmap(R)) .
+endfm
+
+
+view Tree{X :: TRIV} from BOX to TREE-FUNC{X} is
+    sort Elt to X$Elt .
+    sort Box to Tree{X$Elt} .
+endv
+
+fmod EX is
+ pr FUNCTOR{Tree{Int}} .
+ var I : Int .
+ eq f(I) = I + 1 .
+endfm
+
+
+red map(mt) .
+red map(t(mt, 2, mt)) .
+red map(t(t(mt,1,mt), 2, mt)) .
+eof 
