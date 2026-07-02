@@ -79,21 +79,12 @@ endv
 
 ***
 *** ============================================================
-*** MODULE 3: 2ARROW
+*** MODULE 3: BINFUN
 *** ============================================================
 
 --- NOTE the two-level binding of parameters may rise an issue if theory-views are then used to further instantiate the module
-fmod 2ARROW{X :: TRIV, Y :: TRIV, Z :: TRIV} is
-  pr ARROW{X, Arrow{Y,Z}} * (sort Arrow{X, Arrow{Y,Z}} to 2Arrow{X, Y, Z}) .
-endfm
-
-***
-*** ============================================================
-*** MODULE 4: BINFUN
-*** ============================================================
-
 fmod BINFUN{X :: TRIV, Y :: TRIV} is
-  pr 2ARROW{X, Y, Y} * (sort 2Arrow{X, Y, Y} to BinFun{X, Y}) .
+  pr ARROW{X, Arrow{Y,Y}} *  (sort Arrow{X, Arrow{Y,Y}} to BinFun{X, Y}) .
 endfm
 
 --- EXAMPLE
@@ -108,7 +99,7 @@ red (lambda x:Nat : lambda y:String : string(x:Nat, 16) + y:String) 17 "a" .
 
 ***
 *** ============================================================
-*** MODULE 5: BINFUN-H
+*** MODULE 4: BINFUN-H
 *** homogeneous bin function (helpful?)
 *** ============================================================
 

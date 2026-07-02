@@ -102,7 +102,7 @@ endfm
 red in FOLD-EX7 : fold(bf(s, acc), nil, ["a" "aa" "aaa" "aaaa" "aaaaa"]) .
 
 
-fmod EX8 is
+fmod FOLD-EX8 is
   protecting FOLD-AS-MAP{ElistAsColl{Float}, ListColl{String}} * (sort Arrow{Collection{ListColl{String}}} to Arrow{List{String}},
              sort  BinFun{ElistAsColl{Float},Collection{ListColl{String}}} to  BinFun{Float,List{String}}) .
   protecting CONVERSION .
@@ -111,4 +111,4 @@ fmod EX8 is
   eq bf(x, acc) = lambda x : lambda acc : (string(x) acc) . 
 endfm
 
-red in EX8 : fold(bf(x, acc), nil, [ 1.0 2.0 3.0 1.0 2.0 3.0 ]) .
+red in FOLD-EX8 : fold(bf(x, acc), nil, [ 1.0 2.0 3.0 1.0 2.0 3.0 ]) .
