@@ -1,0 +1,28 @@
+--- examples of higher-order operations using lambda
+
+fmod BENCHM1 is
+  pr LIST{String} .
+  pr SET{Nat} .
+
+  op map : List{String} -> Set{Nat} .
+  var x : String .
+  var lx : List{String} .
+
+  eq map(nil) = empty .
+  eq map(x lx) = length(x), map(lx) .
+
+endfm
+
+
+--- red in BENCHM1 : map(lambda x:Char : ascii(x:Char),  ["a" "d" "T" "S"]) .
+
+--- red in BENCHM1 : map(toLen(x), cat^1(["cat" "dog" "Tiger" "Shark" "Snake" "leopard" "lion"])) .
+
+--- fmod BENCHM2 is
+---   protecting MAP-ASCOLL{ElistAsColl{Float}, ListColl{String}} * (sort Arrow{ElistAsColl{Float}, ListColl{String}} to Arrow{Float,String}) .
+---   protecting CONVERSION .
+---   op toString  : Float -> Arrow{Float, String} .
+---   var x : Float .
+---   eq toString(x) = lambda x : string(floor(x)) .
+--- endfm
+
