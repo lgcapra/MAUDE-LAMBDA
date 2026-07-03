@@ -66,7 +66,7 @@ fmod MAP-ASCOLL{X :: AS-COLLECTION, Y :: COLLECTION} is
   eq $map (f, (l'' e), l') = $map(f, l'', (Y$nil f e) l') . --- retains the order, if any
 endfm
 
---- definition of MAP- between COLLECTION based on MAP-ASCOLL (redundant, but necessary if we used only MAP-ASCOLL)
+--- definition of MAP- between COLLECTION based on MAP-ASCOLL
 fmod MAP-COLL'{X :: COLLECTION,Y :: COLLECTION} is
   protecting MAP-ASCOLL{COLLECTION, IdeColl}{X, Y} * (sort Arrow{COLLECTION, IdeColl}{X,Y} to Arrow{X,Y}) .
 endfm

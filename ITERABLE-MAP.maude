@@ -127,3 +127,21 @@ fmod EX2' is
 endfm
 
 red in EX2' : map(1.1 2.0 3.0 1.0 2.1 3.0) .
+
+fmod BENCHM1 is
+  protecting MAP-ASCOLL{ElistAsColl{String}, SetColl{Nat}} * (sort Arrow{ElistAsColl{String}, SetColl{Nat}} to Arrow{String, Nat}) .
+  var x : String .
+  eq f(x) = length(x) .
+endfm
+
+
+red in BENCHM1 : map(cat^1(["cat" "dog" "Tiger" "Shark" "Snake" "leopard" "lion"])) .
+
+fmod BENCHM2 is
+  protecting MAP-ASCOLL{ElistAsColl{Float}, ListColl{String}} * (sort Arrow{ElistAsColl{Float}, ListColl{String}} to Arrow{Float,String}) .
+  protecting CONVERSION .
+  var x : Float .
+  eq f(x) = string(floor(x)) .
+endfm
+
+red in BENCHM2 : map(cat^2([ 1.2 2.4 3.0 ])) .

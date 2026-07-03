@@ -8,6 +8,9 @@ fmod ELIST{X :: TRIV} is
  op [_] : NeList{X} -> NeElist{X} [ctor] .
  op list : Elist{X} -> List{X} .
  eq list([L:List{X}]) =  L:List{X} .
+ op cat : NeElist{X} -> NeElist{X} [iter] .
+ var L : NeList{X} .
+ eq cat([L]) = [L L] .
 endfm
 
 *** parameterized trivial view to E-LIST{X}
