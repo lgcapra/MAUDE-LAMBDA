@@ -108,7 +108,7 @@ fmod FOLD-EX8 is
   protecting CONVERSION .
   var x : Float . var acc : List{String} .
   op bf : Float List{String} -> BinFun{Float, List{String}} .
-  eq bf(x, acc) = lambda x : lambda acc : (string(x) acc) . 
+  eq bf(x, acc) = lambda x : lambda acc : if abs(x) > 1e-6 then (string(x) acc) else nil acc fi .
 endfm
 
-red in FOLD-EX8 : fold(bf(x, acc), nil, [ 1.0 2.0 3.0 1.0 2.0 3.0 ]) .
+red in FOLD-EX8 : fold(bf(x, acc), nil, [ 1.0 -2.3e-8 3.0 1.0 2.0 3.0e-10 ]) .

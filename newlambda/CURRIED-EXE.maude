@@ -10,7 +10,14 @@ fmod EX-CURRIED is
   eq curryAdd(n, m) = lambda n : lambda m : n + m .
 endfm
 
-red (curryAdd(n, m) 3) 4 .
+fmod EX-CURRIED1 is
+  protecting ARROW{String, Arrow{String,Bool}} .
+  vars n m : String .
+  op curryLess : String String -> Arrow{String, Arrow{String,Bool}} .
+  eq curryLess(n, m) = lambda n : lambda m : length(n) < length(m) .
+endfm
+
+red (curryLess(n, m) "ab") "acc" .
 
 fmod EX-CURRIED2 is
   protecting ARROW{Nat, Arrow{Nat,Float}} .
