@@ -1,6 +1,6 @@
 in LAMBDA-DEF
 
---- examples of curried functions (should be moved?)
+--- examples of curried functions 
 
 fmod EX-CURRIED is
   protecting ARROW{Nat, Arrow{Nat,Nat}} .

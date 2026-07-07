@@ -1,3 +1,5 @@
+--- Some definitions for the meta-level 
+
 fmod UNIVERSAL-EVAL is
   protecting META-LEVEL .
   --- Parameters: Module, OpName, List of Arguments
@@ -20,27 +22,6 @@ fmod TRIP-MODULE is
   eq combine(V1, V1, V2) = V2 .
 endfm
 
-reduce in UNIVERSAL-EVAL : 
-    applyAny(
-        upModule('TRIP-MODULE, false), 
-        'combine, 
-        ('a.Value , 'a.Value , 'c.Value)
-    ) .
-
-reduce in UNIVERSAL-EVAL : 
-    applyAny(
-        upModule('NAT-LIST, false), 
-        '__, 
-        ('0.Nat ,  upTerm( 1 2) )
-    ) .
-
---- same as above
-reduce in UNIVERSAL-EVAL : 
-    applyAny(
-        upModule('NAT-LIST, false), 
-        '__, 
-        ('0.Nat , '__['s_['0.Zero], 's_^2['0.Zero]])
-    ) .
 
 --- ALternative approach (helpful?)
 
@@ -68,4 +49,29 @@ fmod RUN-SPECIFIC-TRIP is
   protecting STATIC-EVALUATOR{SpecificTripView} .
 endfm
 
+eof
+
+--- Example of use
+
+reduce in UNIVERSAL-EVAL : 
+    applyAny(
+        upModule('TRIP-MODULE, false), 
+        'combine, 
+        ('a.Value , 'a.Value , 'c.Value)
+    ) .
+
+reduce in UNIVERSAL-EVAL : 
+    applyAny(
+        upModule('NAT-LIST, false), 
+        '__, 
+        ('0.Nat ,  upTerm( 1 2) )
+    ) .
+
+--- same as above
+reduce in UNIVERSAL-EVAL : 
+    applyAny(
+        upModule('NAT-LIST, false), 
+        '__, 
+        ('0.Nat , '__['s_['0.Zero], 's_^2['0.Zero]])
+    ) .
 reduce in RUN-SPECIFIC-TRIP : runEval .
