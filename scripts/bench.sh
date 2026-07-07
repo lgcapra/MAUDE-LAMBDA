@@ -1,18 +1,20 @@
 #!/usr/bin/env bash
 
+# Using hyperfine to run different instances of the benchmarks (moving the
+# number N of elements in the list)
+
 set -euo pipefail
 
-MIN_N="${1:-10}"
-MAX_N="${2:-300}"
+MIN_N="${1:-10000}"
+MAX_N="${2:-20000}"
 RUNS="${3:-10}"
-STEP="${4:-50}"
+STEP="${4:-1000}"
 
 RESULTS_DIR="benchmark-results"
 
 if ! command -v hyperfine >/dev/null 2>&1; then
     echo "Error: hyperfine is not installed."
     echo "On Ubuntu/Debian, try: sudo apt install hyperfine"
-    echo "With Cargo, try: cargo install hyperfine"
     exit 1
 fi
 

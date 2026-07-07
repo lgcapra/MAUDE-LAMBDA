@@ -1,3 +1,16 @@
+'''
+Running the 3 benchmarks 
+
+Dependencies: 
+pip install maude
+
+Examples of use: 
+
+positional arguments:
+  {1,2,3}     Benchmark identifier: 1, 2, or 3.
+  n           Number of random strings.
+'''
+
 import argparse
 import random
 import string
@@ -11,7 +24,7 @@ MAX_STRING_LENGTH = 12
 
 
 def generate_random_strings(n: int) -> list[str]:
-    """Generate a deterministic sequence of n random strings."""
+    '''Generating random strings'''
     if n < 0:
         raise ValueError("The number of strings must be non-negative.")
 
@@ -40,15 +53,13 @@ def to_maude_string_list(values: list[str]) -> str:
 
 
 def main(benchmark: int, n: int) -> None:
+    module_name = "BENCHMARK"
     if benchmark == 1:
         maude_file = "bench"
-        module_name = "BENCHM1"
     elif benchmark == 2:
         maude_file = "bench2"
-        module_name = "BENCHM1"
     elif benchmark == 3:
         maude_file = "bench3"
-        module_name = "BENCHM1"
     else:
         raise ValueError(
             "The benchmark identifier must be 1, 2, or 3."
@@ -89,7 +100,6 @@ def main(benchmark: int, n: int) -> None:
             f"Could not parse the Maude term:\n{term_text}"
         )
 
-    #print(term)
     term.reduce()
     print(term)
 

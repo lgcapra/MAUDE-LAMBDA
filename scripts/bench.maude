@@ -1,0 +1,9 @@
+--- Benchmark using lambdas 
+in ../lambda/LAMBDA-MAP
+
+fmod BENCHMARK is
+  protecting MAP-ASCOLL{ElistAsColl{String}, SetColl{Nat}} * (sort Arrow{ElistAsColl{String}, SetColl{Nat}} to Arrow{String, Nat}) .
+  op toLen  : String -> Arrow{String, Nat} .
+  var x : String .
+  eq toLen(x) = lambda x : length(x) .
+endfm

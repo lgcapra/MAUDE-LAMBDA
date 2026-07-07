@@ -1,0 +1,14 @@
+--- Benchmark defining map directly (without our approach)
+
+fmod BENCHMARK is
+  pr LIST{String} .
+  pr SET{Nat} .
+
+  op map : List{String} -> Set{Nat} .
+  var x : String .
+  var lx : List{String} .
+
+  eq map(nil) = empty .
+  eq map(x lx) = length(x), map(lx) .
+
+endfm

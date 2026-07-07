@@ -1,0 +1,10 @@
+--- Benchmark using parametrized modules 
+in ../pmodule/ITERABLE-MAP 
+
+
+fmod BENCHMARK is
+  protecting MAP-ASCOLL{ElistAsColl{String}, SetColl{Nat}} * (sort Arrow{ElistAsColl{String}, SetColl{Nat}} to Arrow{String, Nat}) .
+  var x : String .
+  eq f(x) = length(x) .
+endfm
+
