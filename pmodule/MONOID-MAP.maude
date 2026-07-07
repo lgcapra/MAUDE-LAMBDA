@@ -45,7 +45,6 @@ fmod NAT-LIST-MAP is
   pr LAMBDA-MAP{NatList} .
 endfm
 
-red map(1 2 3 4 0 9 nil) .
 
 *** 2nd example: a list of strings coverted into a list of nat using length
 *** we need to define a module including both kinds of lists
@@ -66,4 +65,8 @@ fmod STR-NAT-LIST-MAP is
   pr LAMBDA-MAP{StrNatList} .
 endfm
 
-red map("1" "2" "3" "4" "0" "9" "8" "10" "100" nil) .
+eof
+
+--- Examples of use 
+red in NAT-LIST-MAP : map(1 2 3 4 0 9 nil) .
+red in STR-NAT-LIST-MAP : map("1" "2" "3" "4" "0" "9" "8" "10" "100" nil) .

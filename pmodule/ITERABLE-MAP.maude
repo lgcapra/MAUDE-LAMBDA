@@ -1,4 +1,4 @@
-in COLLECTIONS
+in ../base/COLLECTIONS
 
 fth CollToColl is 
  inc COLLECTION  .
@@ -44,7 +44,6 @@ fmod NAT-LIST-MAP is
   pr ITE-MAP{NatList} .
 endfm
 
-red map(1 2 3 4 0 9 nil) .
 
 --- 2nd example: a list of strings coverted into a set of nat using length
 --- we need to define a module including both kinds of collections
@@ -70,11 +69,6 @@ fmod STRLIST-NATSET-MAP is
    pr ITE-MAP{StrListToNatSet} .
 endfm
 
-red map("1" "2" "3" "4" "0" "9" "8" "10" "100" nil  "1" "2" "3" "4" "0" "9" "8" "10" "100" nil
-        "1" "2" "3" "4" "0" "9" "8" "10" "100" nil  "1" "2" "3" "4" "0" "9" "8" "10" "100" nil
-        "1" "2" "3" "4" "0" "9" "8" "10" "100" nil  "1" "2" "3" "4" "0" "9" "8" "10" "100" nil
-        "1" "2" "3" "4" "0" "9" "8" "10" "100" nil  "1" "2" "3" "4" "0" "9" "8" "10" "100" nil
-        "1" "2" "3" "4" "0" "9" "8" "10" "100" nil  "1" "2" "3" "4" "0" "9" "8" "10" "100" nil) .
 
 --- alternative definition
 
@@ -108,7 +102,6 @@ fmod EX1 is
   eq f(x) = string(ceiling(x)) .
 endfm
 
-red in EX1 : map([1.0 2.5 3.0 1.0 2.0 3.5]) .
 
 fmod EX2 is
   protecting MAP-COLL{ListColl{Float}, ListColl{String}} . *** cambiare PR
@@ -117,7 +110,6 @@ fmod EX2 is
   eq f(x) = string(x) .
 endfm
 
-red in EX2 : map(1.0 2.0 3.0 1.0 2.0 3.0) .
 
 fmod EX2' is
   protecting MAP-COLL{ListColl{Float}, ListColl{String}} . *** cambiare PR
@@ -126,7 +118,6 @@ fmod EX2' is
   eq f(x) = string(ceiling(x)) .
 endfm
 
-red in EX2' : map(1.1 2.0 3.0 1.0 2.1 3.0) .
 
 fmod BENCHM1 is
   protecting MAP-ASCOLL{ElistAsColl{String}, SetColl{Nat}} * (sort Arrow{ElistAsColl{String}, SetColl{Nat}} to Arrow{String, Nat}) .
@@ -135,7 +126,6 @@ fmod BENCHM1 is
 endfm
 
 
-red in BENCHM1 : map(cat^1(["cat" "dog" "Tiger" "Shark" "Snake" "leopard" "lion"])) .
 
 fmod BENCHM2 is
   protecting MAP-ASCOLL{ElistAsColl{Float}, ListColl{String}} * (sort Arrow{ElistAsColl{Float}, ListColl{String}} to Arrow{Float,String}) .
@@ -143,5 +133,25 @@ fmod BENCHM2 is
   var x : Float .
   eq f(x) = string(floor(x)) .
 endfm
+
+eof 
+--- Some examples 
+
+red in NAT-LIST-MAP : map(1 2 3 4 0 9) .
+
+red in STRLIST-NATSET-MAP : 
+    map("1" "2" "3" "4" "0" "9" "8" "10" "100" nil  "1" "2" "3" "4" "0" "9" "8" "10" "100" nil
+        "1" "2" "3" "4" "0" "9" "8" "10" "100" nil  "1" "2" "3" "4" "0" "9" "8" "10" "100" nil
+        "1" "2" "3" "4" "0" "9" "8" "10" "100" nil  "1" "2" "3" "4" "0" "9" "8" "10" "100" nil
+        "1" "2" "3" "4" "0" "9" "8" "10" "100" nil  "1" "2" "3" "4" "0" "9" "8" "10" "100" nil
+        "1" "2" "3" "4" "0" "9" "8" "10" "100" nil  "1" "2" "3" "4" "0" "9" "8" "10" "100" nil) .
+
+red in EX1 : map([1.0 2.5 3.0 1.0 2.0 3.5]) .
+
+red in EX2 : map(1.0 2.0 3.0 1.0 2.0 3.0) .
+
+red in EX2' : map(1.1 2.0 3.0 1.0 2.1 3.0) .
+
+red in BENCHM1 : map(cat^1(["cat" "dog" "Tiger" "Shark" "Snake" "leopard" "lion"])) .
 
 red in BENCHM2 : map(cat^2([ 1.2 2.4 3.0 ])) .
