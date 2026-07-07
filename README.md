@@ -22,7 +22,7 @@ this additional flexibility comes with an execution overhead: meta-level
 operations are required to perform beta-reduction during function application.
 
 Further details about the implementation are available in
-[the accompanying paper](./paper.pdf).
+[thi paper](./paper.pdf).
 
 The two approaches are implemented in separate directories:
 
@@ -32,7 +32,8 @@ The two approaches are implemented in separate directories:
   corresponding higher-order functions.
 
 Each directory contains a description of the implemented modules, together
-with examples of their use.
+with examples of their use. The directory `base` contains common definitions
+including the definition of collections and iterators. 
 
 The `scripts` directory contains scripts for benchmarking and comparing the
 two approaches.
