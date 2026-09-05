@@ -1,0 +1,29 @@
+in COLLECTIONS.maude
+
+fmod MAP-ASCOLL{X :: AS-COLLECTION, Y :: COLLECTION} is
+    op f : [X$Elt] -> [Y$Elt] .
+    op map : X$Iterable -> [Y$Coll] .
+    var l : X$Iterable . var l' : Y$Coll .
+    var l'' : X$Coll . var e : X$Elt .
+    eq map(l) = $map(iterator(l), Y$nil) .
+    op $map : X$Coll Y$Coll -> [Y$Coll] .
+    eq $map(X$nil, l') = l' .
+    eq $map ((l'' e),l') = $map(l'',(Y$nil f(e)) l') .
+    endfm
+
+fmod MAP-COLL{X :: COLLECTION,Y :: COLLECTION} is
+    pr MAP-ASCOLL{COLLECTION, IdeColl}{X, Y} .
+endfm
+
+fmod MAP-SAME-COLL{X :: COLLECTION} is
+    pr MAP-COLL{X, X} .
+endfm
+
+fmod EX1 is
+  gb MAP-ASCOLL{ElistAsColl{Float},ListColl{String}} .
+  pr CONVERSION .
+  var x : Float .
+  eq f(x) = string(ceiling(x)) .
+endfm
+
+reduce in EX1 : map([1.0 2.5 3.2]) .
