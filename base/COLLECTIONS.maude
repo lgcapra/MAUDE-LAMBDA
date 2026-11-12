@@ -21,7 +21,6 @@ endfth
   op __ : Coll Coll -> Coll [id: nil] . --- bulk add
  endfth
 
-
 --- "trivial" theory-views
 
 view Collection from TRIV to COLLECTION is
@@ -50,7 +49,6 @@ view ListColl{X :: TRIV} from COLLECTION to LIST{X} is
   sort Coll to List{X} .
   sort Elt to X$Elt .
 endv
-
 
 view SetColl{X :: TRIV} from COLLECTION to SET{X} is
   sort Coll to Set{X} .
@@ -109,6 +107,5 @@ view ElistAsColl{X :: TRIV} from AS-COLLECTION to ELIST{X} is
   sort Coll to List{X} .
   sort Elt to X$Elt .
   sort Iterable to Elist{X} .
-  --- op __ to _,_ .  *** necessary because __ is renamed to _,_ in ELIST
   op iterator to list .
 endv

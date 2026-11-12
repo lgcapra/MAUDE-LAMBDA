@@ -1,0 +1,118 @@
+--- interfaces and views used for representing collections in higher-order operations
+--- new version, slightly different from COLLECTIONS.maude
+--- we introduce a new theory C-COLL for commutative collections and a new theory NC-COLL for non-commutative collections
+in COLLECTIONS.maude
+
+
+ --- A commutative COLLECTION is a COLLECTION whose '__' is commutative
+ fth C-COLL is
+  including COLLECTION . 
+  var L : Coll . vars e e' : Elt .
+  eq (L e) e' = (L e') e [nonexec] .
+ endfth
+
+ --- A non-commutative COLLECTION is a COLLECTION whose '__' is not commutative
+ fth NC-COLL is
+  including COLLECTION . 
+  var L  : Coll . vars e e' : Elt .
+  ceq (L e) e' = (L e') e if e = e' [nonexec] .
+ endfth
+
+--- "trivial" theory-views
+
+view Ccoll from TRIV to C-COLL is
+endv
+
+view NCcoll from TRIV to NC-COLL is
+endv
+
+--- NOTE
+--- from a theoretical point of view, a COLLECTION is also ITERABLE, but it is preferrable to keep
+--- these two theories clearly separated, although this leads to define two similar MAP- modules
+--- whose 1st parameter (the map's source) is either ITERABLE or COLLECTION and whose 2nd parameter (target) is COLLECTION; 
+--- see also the description in LAMBDA-MAP
+---
+--- COLLECTION can be used as a source of a map operation only if __ is a constructor
+--- See the counter-example with ELIST 
+
+--- identity theory-views
+
+view IdeCcoll from C-COLL to C-COLL is
+endv
+
+view IdeNCcoll from NC-COLL to NC-COLL is
+endv
+
+--- parametrized views of built-in collections
+
+view ListNC-Coll{X :: TRIV} from NC-COLL to LIST{X} is 
+  sort Coll to List{X} .
+  sort Elt to X$Elt .
+endv
+
+view SetC-Coll{X :: TRIV} from C-COLL to SET{X} is
+  sort Coll to Set{X} .
+  sort Elt to X$Elt .
+  op nil to empty .
+  op __ to _,_ .
+endv
+
+view ElistNC-Coll{X :: TRIV} from NC-COLL to ELIST{X} is 
+  sort Coll to Elist{X} .
+  sort Elt to X$Elt .
+  var Y : Elt .
+  vars L L' : Coll .
+  op nil to term [ nil ] .
+  op (L Y) to term [ list(L) Y ] .
+  op (L L') to term [ list(L) list(L') ] .
+endv
+
+view ElistAsNC-Coll{X :: TRIV} from AS-NC-COLL to ELIST{X} is 
+  sort Coll to List{X} .
+  sort Elt to X$Elt .
+  sort Iterable to Elist{X} .
+  op iterator to list .
+endv
+
+fth AS-C-COLL is
+  including C-COLL .
+  including AS-COLLECTION .
+endfth
+
+fth AS-NC-COLL is
+  including NC-COLL .
+  including AS-COLLECTION .
+endfth
+
+
+--- theory-views between COLLECTIONs
+view AS-NC-COLL from AS-COLLECTION to AS-NC-COLL is
+endv
+
+view AS-C-COLL from AS-COLLECTION to AS-C-COLL is
+endv
+
+---view NC-COLL from AS-NC-COLL to NC-COLL is
+---  sort Iterable to Coll .
+---  op iterator(C:Iterable) to term C:Coll .
+--- endv
+
+---view C-COLL from  AS-C-COLL to C-COLL is
+---  sort Iterable to Coll .
+---  op iterator(C:Iterable) to term C:Coll .
+---endv
+
+view NC-COLL from COLLECTION to NC-COLL is
+endv
+
+view C-COLL from COLLECTION to C-COLL is
+endv
+
+
+--- based on AS-C-COLL: the iterator associated with a ELIST is the enclosed LIST
+view ElistAsCcoll{X :: TRIV} from AS-C-COLL to ELIST{X} is 
+  sort Coll to List{X} .
+  sort Elt to X$Elt .
+  sort Iterable to Elist{X} .
+  op iterator to list .
+endv

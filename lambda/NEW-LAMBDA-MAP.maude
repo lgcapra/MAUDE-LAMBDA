@@ -1,0 +1,33 @@
+--- definition of higher-order map based on LAMBDA-DEF and COLLECTIONS
+in LAMBDA-DEF
+in ../base/NEW-COLLECTIONS
+
+fmod MAP-AS-NC-COLL{X :: AS-NC-COLL, Y :: COLLECTION} is
+    pr MAP-ASCOLL{AS-NC-COLL, IdeColl}{X, Y} * (sort  Arrow{AS-NC-COLL,IdeColl}{X,Y}
+        to  Arrow{X,Y}).
+endfm
+
+fmod MAP-NC-COLL{X :: NC-COLL,Y :: COLLECTION} is
+    pr MAP-COLL{NC-COLL, IdeColl}{X, Y} * (sort   Arrow{NC-COLL,IdeColl}{X,Y}
+        to  Arrow{X,Y}).
+endfm
+
+fmod MAP-SAME-NC-COLL{X :: NC-COLL} is
+    pr MAP-SAME-COLL{NC-COLL}{X} * (sort Arrow{NC-COLL,NC-COLL}{X,X}
+        to  Arrow{X,X}) .
+endfm
+
+fmod MAP-AS-C-COLL{X :: AS-C-COLL, Y :: C-COLL} is
+    pr MAP-ASCOLL{AS-C-COLL, C-COLL}{X, Y} * (sort  Arrow{AS-C-COLL,C-COLL}{X,Y}
+        to  Arrow{X,Y}).
+endfm
+
+fmod MAP-C-COLL{X :: C-COLL,Y :: C-COLL} is
+    pr MAP-COLL{C-COLL, C-COLL}{X, Y} * (sort  Arrow{C-COLL,C-COLL}{X,Y}
+        to  Arrow{X,Y}).
+endfm
+
+fmod MAP-SAME-C-COLL{X :: C-COLL} is
+    pr MAP-SAME-COLL{C-COLL}{X} * (sort Arrow{C-COLL,C-COLL}{X,X}
+        to  Arrow{X,X})  .
+endfm

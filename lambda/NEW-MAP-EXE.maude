@@ -1,0 +1,87 @@
+--- examples of higher-order operations using lambda
+in NEW-LAMBDA-MAP
+
+fmod EX1 is
+  protecting MAP-SAME-NC-COLL{ListNC-Coll{String}} * (sort Arrow{ListNC-Coll{String}, ListNC-Coll{String}} to Arrow{String,String}) .
+   op  double  : String -> Arrow{String,String} .
+   var s : String .
+   eq double(s) = lambda s : s + upperCase(s) .   
+endfm
+
+red in EX1 : map(double(s), ("one" "two" "three" "one")) .
+
+ fmod EX2 is
+   protecting MAP-NC-COLL{ListNC-Coll{Float}, ListColl{String}} * (sort Arrow{ListNC-Coll{Float}, ListColl{String}} to Arrow{Float, String}) .
+   protecting CONVERSION .
+   op toString  : Float -> Arrow{Float, String} .
+   var x : Float .
+   eq toString(x) = lambda x : string(x) .
+ endfm
+
+red in EX2 : map(toString(x), (1.0 2.0 3.0 1.0 2.0 3.0)) .
+
+
+fmod EX3 is
+  protecting MAP-SAME-NC-COLL{ListNC-Coll{String}} * (sort Arrow{ListNC-Coll{String}, ListNC-Coll{String}} to Arrow{String,String}).
+  op  double  : String -> [Arrow{String,String}] .
+  var s : String .
+  eq double(s) = lambda s : s + s .   
+endfm
+
+red in EX3 : map(double(s), ("uno" "due" "tre")) .
+
+fmod EX4 is
+  protecting MAP-C-COLL{SetC-Coll{Float}, SetC-Coll{String}} * (sort Arrow{SetC-Coll{Float}, SetC-Coll{String}} to Arrow{Float,String}) .
+  protecting CONVERSION .
+  op toString  : Float -> Arrow{Float, String} .
+  var x : Float .
+  eq toString(x) = lambda x : string(x + 10.0) .
+endfm
+
+red in EX4 : map(toString(x), (1.0, 2.0, 3.0, 1.0, 2.0, 3.0)) .
+
+
+fmod EX5' is
+   protecting MAP-AS-NC-COLL{ElistAsNC-Coll{Float}, ListColl{String}} * (sort Arrow{ElistAsNC-Coll{Float}, ListColl{String}} to Arrow{Float,String}) .
+   protecting CONVERSION .
+   op toString  : Float -> Arrow{Float, String} .
+   var x : Float .
+   eq toString(x) = lambda x : string(x) .
+ endfm
+
+red in EX5' : map(toString(x), cat^1([ 1.0 2.0 3.0 ])) .
+
+
+--- map an ELIST into another
+
+fmod EX6' is
+   protecting MAP-AS-NC-COLL{ElistAsNC-Coll{Float}, ListColl{String}} * (sort Arrow{ElistAsNC-Coll{Float}, ListColl{String}} to Arrow{Float,String}) .
+   protecting CONVERSION .
+   op toString  : Float -> Arrow{Float, String} .
+   var x : Float .
+   eq toString(x) = lambda x : string(x) .
+endfm
+
+red in EX6' : map(toString(x), [ 1.0 2.0 3.0 1.0 2.0 3.0 ]) .
+
+fmod BENCHM1 is
+   protecting MAP-AS-NC-COLL{ElistAsNC-Coll{String}, SetColl{Nat}} * (sort Arrow{ElistAsNC-Coll{String}, SetColl{Nat}} to Arrow{String, Nat}) .
+   op toLen  : String -> Arrow{String, Nat} .
+   var x : String .
+   eq toLen(x) = lambda x : length(x) .
+endfm
+
+
+red in BENCHM1 : map(lambda x:Char : ascii(x:Char),  ["a" "d" "T" "S"]) .
+
+red in BENCHM1 : map(toLen(x), cat^1(["cat" "dog" "Tiger" "Shark" "Snake" "leopard" "lion"])) .
+
+fmod BENCHM2 is
+  protecting MAP-AS-NC-COLL{ElistAsNC-Coll{Float}, ListColl{String}} * (sort Arrow{ElistAsNC-Coll{Float}, ListColl{String}} to Arrow{Float,String}) .
+  protecting CONVERSION .
+  op toString  : Float -> Arrow{Float, String} .
+  var x : Float .
+  eq toString(x) = lambda x : string(floor(x)) .
+endfm
+
+red in BENCHM2 : map(toString(x), cat^2([ 1.2 2.4 3.0 ])) .

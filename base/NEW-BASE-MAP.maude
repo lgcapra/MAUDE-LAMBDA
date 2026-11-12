@@ -1,0 +1,35 @@
+in NEW-COLLECTIONS.maude
+in BASE-MAP.maude
+
+fmod MAP-AS-NC-COLL{X :: AS-NC-COLL, Y :: COLLECTION} is
+    pr MAP-ASCOLL{AS-NC-COLL, IdeColl}{X, Y} .
+endfm
+
+fmod MAP-NC-COLL{X :: NC-COLL,Y :: COLLECTION} is
+    pr MAP-COLL{NC-COLL, IdeColl}{X, Y} .
+endfm
+
+fmod MAP-SAME-NC-COLL{X :: NC-COLL} is
+    pr MAP-SAME-COLL{NC-COLL}{X} .
+endfm
+
+fmod MAP-AS-C-COLL{X :: AS-C-COLL, Y :: C-COLL} is
+    pr MAP-ASCOLL{AS-C-COLL, C-COLL}{X, Y} .
+endfm
+
+fmod MAP-C-COLL{X :: C-COLL,Y :: C-COLL} is
+    pr MAP-COLL{C-COLL, C-COLL}{X, Y} .
+endfm
+
+fmod MAP-SAME-C-COLL{X :: C-COLL} is
+    pr MAP-SAME-COLL{C-COLL}{X} .
+endfm
+
+fmod EX1 is
+  gb MAP-C-COLL{SetC-Coll{Float},SetC-Coll{String}} .
+  pr CONVERSION .
+  var x : Float .
+  eq f(x) = string(ceiling(x)) .
+endfm
+
+reduce in EX1 : map((1.0, 2.5, 3.2)) .
